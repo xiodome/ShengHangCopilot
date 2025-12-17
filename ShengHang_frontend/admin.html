@@ -176,6 +176,8 @@
     <script src="js/api.js"></script>
     <script>
         // 检查登录状态和管理员权限
+        // 注意：这只是前端UI保护，所有管理员操作都必须在后端进行权限验证
+        // 后端的 require_admin() 函数会验证实际的管理员权限
         if (!UserStore.isLoggedIn()) {
             window.location.href = 'login.html';
         }

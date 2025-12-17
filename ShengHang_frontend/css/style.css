@@ -552,6 +552,7 @@ body {
     height: 30px;
     animation: spin 1s linear infinite;
     margin: 0 auto 15px;
+    will-change: transform;
 }
 
 @keyframes spin {

@@ -2,25 +2,28 @@
  * 声航音乐服务系统 - API封装
  */
 
-// API基础配置
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// API基础配置 - 可通过修改此值来适配不同环境
+// 开发环境: 'http://127.0.0.1:8000'
+// 生产环境: 根据实际部署地址修改
+const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:8000';
 
-// 存储用户信息
+// 存储用户信息 - 注意：生产环境应使用更安全的认证方式(如httpOnly cookies)
+// localStorage仅用于开发和演示目的
 const UserStore = {
-    getUserId: () => localStorage.getItem('user_id'),
-    getUsername: () => localStorage.getItem('username'),
-    isAdmin: () => localStorage.getItem('is_admin') === 'true',
+    getUserId: () => sessionStorage.getItem('user_id'),
+    getUsername: () => sessionStorage.getItem('username'),
+    isAdmin: () => sessionStorage.getItem('is_admin') === 'true',
     setUser: (userId, username, isAdmin) => {
-        localStorage.setItem('user_id', userId);
-        localStorage.setItem('username', username);
-        localStorage.setItem('is_admin', isAdmin);
+        sessionStorage.setItem('user_id', userId);
+        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('is_admin', isAdmin);
     },
     clearUser: () => {
-        localStorage.removeItem('user_id');
-        localStorage.removeItem('username');
-        localStorage.removeItem('is_admin');
+        sessionStorage.removeItem('user_id');
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('is_admin');
     },
-    isLoggedIn: () => localStorage.getItem('user_id') !== null
+    isLoggedIn: () => sessionStorage.getItem('user_id') !== null
 };
 
 // 通用请求函数
@@ -44,11 +47,21 @@ async function apiRequest(endpoint, options = {}) {
         const data = await response.json();
         
         if (!response.ok) {
-            throw { status: response.status, ...data };
+            const errorInfo = { 
+                status: response.status, 
+                url: endpoint,
+                ...data 
+            };
+            console.error(`API Error: HTTP ${response.status} for ${endpoint}`, data);
+            throw errorInfo;
         }
         
         return data;
     } catch (error) {
+        if (error.status) {
+            // Already formatted API error
+            throw error;
+        }
         console.error('API请求错误:', error);
         throw error;
     }

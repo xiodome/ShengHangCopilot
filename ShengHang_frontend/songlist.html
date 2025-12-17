@@ -470,7 +470,20 @@
         // 辅助函数
         function escapeHtml(text) {
             if (!text) return '';
-            return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        }
+        
+        // 更安全的HTML转义（用于属性值）
+        function escapeAttr(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/'/g, '&#39;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
         
         function showAlert(message, type) {
