@@ -9,7 +9,6 @@ from .tools import *
 # ================================
 # 1. 歌单中心
 # ================================
-# http://127.0.0.1:8000/songlist/list_songlists/
 @csrf_exempt
 def list_songlists(request):
     # --------------------------
@@ -80,7 +79,6 @@ def list_songlists(request):
 # ================================
 # 2. 创建歌单
 # ================================
-# http://127.0.0.1:8000/songlist/create_songlist/
 @csrf_exempt
 def create_songlist(request):
     # --------------------------

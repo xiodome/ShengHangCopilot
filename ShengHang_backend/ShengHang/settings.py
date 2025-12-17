@@ -45,6 +45,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -58,11 +59,18 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # 仅在DEBUG模式下允许所有来源
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://localhost:3000",
+    #"http://localhost:3000",
     "http://127.0.0.1:3000",
+    #"http://localhost:8080",
+    #"http://127.0.0.1:8080",
 ]
+
+# Session 配置
+SESSION_COOKIE_SAMESITE = None  # 允许跨域携带
+SESSION_COOKIE_SECURE = False   # 开发环境 False，生产环境 HTTPS 改为 True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 86400  # 24小时
+SESSION_SAVE_EVERY_REQUEST = True  # 每次请求都更新 session
 
 ROOT_URLCONF = 'ShengHang.urls'
 

@@ -5,7 +5,7 @@
 // API基础配置 - 可通过修改此值来适配不同环境
 // 开发环境: 'http://127.0.0.1:8000'
 // 生产环境: 根据实际部署地址修改
-const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = 'http://127.0.0.1:8000'; //window.API_BASE_URL ||
 
 // 存储用户信息 - 注意：生产环境应使用更安全的认证方式(如httpOnly cookies)
 // localStorage仅用于开发和演示目的

@@ -83,23 +83,21 @@ ShengHang_frontend/
 首先需要启动Django后端服务：
 
 ```bash
-cd ShengHang_backend
-pip install django django-cors-headers mysqlclient
 python manage.py runserver
 ```
 
-### 2. 访问前端页面
+### 2. 启动前端服务
 
-直接用浏览器打开HTML文件即可：
+启动前端服务：
 
 ```bash
-# 方式一：直接用浏览器打开
-open ShengHang_frontend/login.html
+python -m http.server 3000
+```
 
-# 方式二：使用简单HTTP服务器
-cd ShengHang_frontend
-python -m http.server 8080
-# 然后访问 http://localhost:8080/login.html
+### 3. 访问前端页面
+
+```bash
+# 访问 http://127.0.0.1:3000
 ```
 
 ### 3. 配置API地址
