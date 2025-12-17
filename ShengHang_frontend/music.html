@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐中心 - 声航音乐</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">🎵 声航音乐</a>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="music.html" class="active">音乐中心</a>
+            <a href="songlist.html">我的歌单</a>
+            <a href="favorites.html">我的收藏</a>
+            <a href="history.html">播放记录</a>
+            <a href="profile.html">个人中心</a>
+        </div>
+        <div class="user-info">
+            <span id="welcomeText">加载中...</span>
+            <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div id="alertBox"></div>
+        
+        <!-- 标签页 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('song')">🎵 搜索歌曲</button>
+            <button class="tab" onclick="switchTab('singer')">🎤 搜索歌手</button>
+            <button class="tab" onclick="switchTab('album')">💿 搜索专辑</button>
+        </div>
+        
+        <!-- 搜索区域 -->
+        <div class="card" id="searchPanel">
+            <!-- 歌曲搜索 -->
+            <div id="songSearch" class="search-panel">
+                <h3 class="card-title">搜索歌曲</h3>
+                <div class="form-group">
+                    <label>歌曲名称</label>
+                    <input type="text" id="songTitle" placeholder="输入歌曲名称">
+                </div>
+                <div class="form-group">
+                    <label>歌手名称</label>
+                    <input type="text" id="songSinger" placeholder="输入歌手名称">
+                </div>
+                <div class="form-group">
+                    <label>专辑名称</label>
+                    <input type="text" id="songAlbum" placeholder="输入专辑名称">
+                </div>
+                <button class="btn btn-primary" onclick="searchSongs()">搜索歌曲</button>
+            </div>
+            
+            <!-- 歌手搜索 -->
+            <div id="singerSearch" class="search-panel" style="display: none;">
+                <h3 class="card-title">搜索歌手</h3>
+                <div class="form-group">
+                    <label>歌手名称</label>
+                    <input type="text" id="singerName" placeholder="输入歌手名称">
+                </div>
+                <div class="form-group">
+                    <label>歌手类型</label>
+                    <select id="singerType">
+                        <option value="">全部</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="组合">组合</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>国籍</label>
+                    <input type="text" id="singerCountry" placeholder="输入国籍">
+                </div>
+                <button class="btn btn-primary" onclick="searchSingers()">搜索歌手</button>
+            </div>
+            
+            <!-- 专辑搜索 -->
+            <div id="albumSearch" class="search-panel" style="display: none;">
+                <h3 class="card-title">搜索专辑</h3>
+                <div class="form-group">
+                    <label>专辑名称</label>
+                    <input type="text" id="albumTitle" placeholder="输入专辑名称">
+                </div>
+                <div class="form-group">
+                    <label>歌手名称</label>
+                    <input type="text" id="albumSinger" placeholder="输入歌手名称">
+                </div>
+                <button class="btn btn-primary" onclick="searchAlbums()">搜索专辑</button>
+            </div>
+        </div>
+        
+        <!-- 搜索结果 -->
+        <div class="card" id="resultsCard" style="display: none;">
+            <h3 class="card-title" id="resultsTitle">搜索结果</h3>
+            <div id="results"></div>
+        </div>
+        
+        <!-- 详情面板 -->
+        <div class="card" id="detailPanel" style="display: none;">
+            <button class="btn btn-secondary" onclick="closeDetail()" style="margin-bottom: 15px;">← 返回搜索结果</button>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+    
+    <!-- 添加到歌单模态框 -->
+    <div class="modal" id="addToSonglistModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加到歌单</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="songlistList" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 检查登录状态
+        if (!UserStore.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        let currentTab = 'song';
+        let selectedSongId = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+            
+            // 检查URL参数
+            const params = new URLSearchParams(window.location.search);
+            const type = params.get('type');
+            const id = params.get('id');
+            
+            if (type && id) {
+                switchTab(type);
+                loadDetail(type, id);
+            }
+        });
+        
+        // 切换标签页
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach((t, index) => {
+                t.classList.remove('active');
+                if ((tab === 'song' && index === 0) ||
+                    (tab === 'singer' && index === 1) ||
+                    (tab === 'album' && index === 2)) {
+                    t.classList.add('active');
+                }
+            });
+            
+            // 显示对应搜索面板
+            document.querySelectorAll('.search-panel').forEach(p => p.style.display = 'none');
+            document.getElementById(tab + 'Search').style.display = 'block';
+            
+            // 隐藏详情
+            document.getElementById('detailPanel').style.display = 'none';
+            document.getElementById('searchPanel').style.display = 'block';
+            document.getElementById('resultsCard').style.display = 'none';
+        }
+        
+        // 搜索歌曲
+        async function searchSongs() {
+            const filters = {};
+            const title = document.getElementById('songTitle').value.trim();
+            const singer = document.getElementById('songSinger').value.trim();
+            const album = document.getElementById('songAlbum').value.trim();
+            
+            if (title) filters.song_title = title;
+            if (singer) filters.singer_name = singer;
+            if (album) filters.album_title = album;
+            
+            showLoading('results');
+            document.getElementById('resultsCard').style.display = 'block';
+            document.getElementById('resultsTitle').textContent = '歌曲搜索结果';
+            
+            try {
+                const result = await MusicAPI.searchSong(filters);
+                displaySongs(result.songs || []);
+            } catch (error) {
+                showError('results', error.error || '搜索失败');
+            }
+        }
+        
+        // 搜索歌手
+        async function searchSingers() {
+            const filters = {};
+            const name = document.getElementById('singerName').value.trim();
+            const type = document.getElementById('singerType').value;
+            const country = document.getElementById('singerCountry').value.trim();
+            
+            if (name) filters.singer_name = name;
+            if (type) filters.type = type;
+            if (country) filters.country = country;
+            
+            showLoading('results');
+            document.getElementById('resultsCard').style.display = 'block';
+            document.getElementById('resultsTitle').textContent = '歌手搜索结果';
+            
+            try {
+                const result = await MusicAPI.searchSinger(filters);
+                displaySingers(result.singers || []);
+            } catch (error) {
+                showError('results', error.error || '搜索失败');
+            }
+        }
+        
+        // 搜索专辑
+        async function searchAlbums() {
+            const filters = {};
+            const title = document.getElementById('albumTitle').value.trim();
+            const singer = document.getElementById('albumSinger').value.trim();
+            
+            if (title) filters.album_title = title;
+            if (singer) filters.singer_name = singer;
+            
+            showLoading('results');
+            document.getElementById('resultsCard').style.display = 'block';
+            document.getElementById('resultsTitle').textContent = '专辑搜索结果';
+            
+            try {
+                const result = await MusicAPI.searchAlbum(filters);
+                displayAlbums(result.albums || []);
+            } catch (error) {
+                showError('results', error.error || '搜索失败');
+            }
+        }
+        
+        // 显示歌曲列表
+        function displaySongs(songs) {
+            const container = document.getElementById('results');
+            if (songs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🎵</div><p>未找到歌曲</p></div>';
+                return;
+            }
+            
+            container.innerHTML = songs.map(song => `
+                <div class="song-item">
+                    <div class="song-info" style="cursor: pointer;" onclick="viewSongDetail(${song.song_id})">
+                        <div class="song-title">${song.song_title}</div>
+                        <div class="song-meta">
+                            ${song.singers ? song.singers.map(s => s.singer_name).join(', ') : ''} · 
+                            ${song.album_title} · ${song.duration_formatted}
+                        </div>
+                    </div>
+                    <div class="song-actions">
+                        <button class="btn btn-small btn-primary" onclick="playSong(${song.song_id})">播放</button>
+                        <button class="btn btn-small btn-secondary" onclick="addToFavorite('song', ${song.song_id})">收藏</button>
+                        <button class="btn btn-small btn-secondary" onclick="showAddToSonglist(${song.song_id})">添加到歌单</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 显示歌手列表
+        function displaySingers(singers) {
+            const container = document.getElementById('results');
+            if (singers.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🎤</div><p>未找到歌手</p></div>';
+                return;
+            }
+            
+            container.innerHTML = singers.map(singer => `
+                <div class="song-item" style="cursor: pointer;" onclick="viewSingerDetail(${singer.singer_id})">
+                    <div class="song-info">
+                        <div class="song-title">${singer.singer_name}</div>
+                        <div class="song-meta">${singer.type} · ${singer.country || '未知'}</div>
+                    </div>
+                    <div class="song-actions">
+                        <button class="btn btn-small btn-primary" onclick="event.stopPropagation(); followSinger(${singer.singer_id})">关注</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 显示专辑列表
+        function displayAlbums(albums) {
+            const container = document.getElementById('results');
+            if (albums.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">💿</div><p>未找到专辑</p></div>';
+                return;
+            }
+            
+            container.innerHTML = albums.map(album => `
+                <div class="song-item" style="cursor: pointer;" onclick="viewAlbumDetail(${album.album_id})">
+                    <div class="song-info">
+                        <div class="song-title">${album.album_title}</div>
+                        <div class="song-meta">${album.singer_name} · ${album.release_date || '未知'}</div>
+                    </div>
+                    <div class="song-actions">
+                        <button class="btn btn-small btn-secondary" onclick="event.stopPropagation(); addToFavorite('album', ${album.album_id})">收藏</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 查看详情
+        async function loadDetail(type, id) {
+            document.getElementById('searchPanel').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'none';
+            document.getElementById('detailPanel').style.display = 'block';
+            
+            showLoading('detailContent');
+            
+            try {
+                if (type === 'song') {
+                    const song = await MusicAPI.getSongProfile(id);
+                    displaySongDetail(song);
+                } else if (type === 'singer') {
+                    const singer = await MusicAPI.getSingerProfile(id);
+                    displaySingerDetail(singer);
+                } else if (type === 'album') {
+                    const album = await MusicAPI.getAlbumProfile(id);
+                    displayAlbumDetail(album);
+                }
+            } catch (error) {
+                showError('detailContent', error.error || '加载详情失败');
+            }
+        }
+        
+        function viewSongDetail(id) {
+            loadDetail('song', id);
+        }
+        
+        function viewSingerDetail(id) {
+            loadDetail('singer', id);
+        }
+        
+        function viewAlbumDetail(id) {
+            loadDetail('album', id);
+        }
+        
+        // 显示歌曲详情
+        function displaySongDetail(song) {
+            const container = document.getElementById('detailContent');
+            container.innerHTML = `
+                <h2 style="margin-bottom: 20px;">🎵 ${song.song_title}</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <p><strong>歌手:</strong> ${song.singers ? song.singers.map(s => `<a href="#" onclick="viewSingerDetail(${s.singer_id})">${s.singer_name}</a>`).join(', ') : '未知'}</p>
+                        <p><strong>专辑:</strong> <a href="#" onclick="viewAlbumDetail(${song.album_id})">${song.album_title}</a></p>
+                        <p><strong>时长:</strong> ${song.duration_formatted}</p>
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="playSong(${song.song_id})">▶️ 播放</button>
+                    <button class="btn btn-secondary" onclick="addToFavorite('song', ${song.song_id})">❤️ 收藏</button>
+                    <button class="btn btn-secondary" onclick="showAddToSonglist(${song.song_id})">➕ 添加到歌单</button>
+                </div>
+                
+                <h3 style="margin: 20px 0 15px;">💬 评论 (${song.comment_count})</h3>
+                <div style="margin-bottom: 20px;">
+                    <textarea id="commentContent" placeholder="写下你的评论..." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></textarea>
+                    <button class="btn btn-primary" onclick="submitComment('song', ${song.song_id})" style="margin-top: 10px;">发表评论</button>
+                </div>
+                <div id="commentList">
+                    ${song.comments && song.comments.length > 0 ? song.comments.map(comment => `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <span class="username">${comment.user_name}</span>
+                                <span class="time">${comment.comment_time}</span>
+                            </div>
+                            <div class="content">${comment.content}</div>
+                            <div class="actions">
+                                <button onclick="likeComment(${comment.comment_id})">👍 ${comment.like_count}</button>
+                            </div>
+                        </div>
+                    `).join('') : '<p style="color: #888; text-align: center;">暂无评论</p>'}
+                </div>
+            `;
+        }
+        
+        // 显示歌手详情
+        function displaySingerDetail(singer) {
+            const container = document.getElementById('detailContent');
+            container.innerHTML = `
+                <h2 style="margin-bottom: 20px;">🎤 ${singer.singer_name}</h2>
+                <div style="margin-bottom: 20px;">
+                    <p><strong>类型:</strong> ${singer.type}</p>
+                    <p><strong>国籍:</strong> ${singer.country || '未知'}</p>
+                    <p><strong>生日:</strong> ${singer.birthday || '未知'}</p>
+                    <p><strong>简介:</strong> ${singer.introduction || '暂无简介'}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="followSinger(${singer.singer_id})">➕ 关注歌手</button>
+                </div>
+                
+                <h3 style="margin: 20px 0 15px;">💿 专辑列表 (${singer.album_count})</h3>
+                ${singer.albums && singer.albums.length > 0 ? singer.albums.map(album => `
+                    <div class="song-item" onclick="viewAlbumDetail(${album.album_id})" style="cursor: pointer;">
+                        <div class="song-info">
+                            <div class="song-title">${album.album_title}</div>
+                            <div class="song-meta">${album.release_date || '未知'}</div>
+                        </div>
+                    </div>
+                `).join('') : '<p style="color: #888;">暂无专辑</p>'}
+                
+                <h3 style="margin: 20px 0 15px;">🎵 歌曲列表 (${singer.song_count})</h3>
+                ${singer.songs && singer.songs.length > 0 ? singer.songs.map(song => `
+                    <div class="song-item">
+                        <div class="song-info" onclick="viewSongDetail(${song.song_id})" style="cursor: pointer;">
+                            <div class="song-title">${song.song_title}</div>
+                            <div class="song-meta">${song.album_title} · ${song.duration_formatted}</div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-small btn-primary" onclick="event.stopPropagation(); playSong(${song.song_id})">播放</button>
+                        </div>
+                    </div>
+                `).join('') : '<p style="color: #888;">暂无歌曲</p>'}
+            `;
+        }
+        
+        // 显示专辑详情
+        function displayAlbumDetail(album) {
+            const container = document.getElementById('detailContent');
+            container.innerHTML = `
+                <h2 style="margin-bottom: 20px;">💿 ${album.album_title}</h2>
+                <div style="margin-bottom: 20px;">
+                    <p><strong>歌手:</strong> <a href="#" onclick="viewSingerDetail(${album.singer_id})">${album.singer_name}</a></p>
+                    <p><strong>发行日期:</strong> ${album.release_date || '未知'}</p>
+                    <p><strong>歌曲数量:</strong> ${album.song_count}</p>
+                    <p><strong>总时长:</strong> ${album.total_duration_formatted}</p>
+                    <p><strong>简介:</strong> ${album.description || '暂无简介'}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="addToFavorite('album', ${album.album_id})">❤️ 收藏专辑</button>
+                </div>
+                
+                <h3 style="margin: 20px 0 15px;">🎵 歌曲列表</h3>
+                ${album.songs && album.songs.length > 0 ? album.songs.map(song => `
+                    <div class="song-item">
+                        <div class="song-info" onclick="viewSongDetail(${song.song_id})" style="cursor: pointer;">
+                            <div class="song-title">${song.song_title}</div>
+                            <div class="song-meta">
+                                ${song.singers ? song.singers.map(s => s.singer_name).join(', ') : ''} · ${song.duration_formatted}
+                            </div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-small btn-primary" onclick="event.stopPropagation(); playSong(${song.song_id})">播放</button>
+                            <button class="btn btn-small btn-secondary" onclick="event.stopPropagation(); showAddToSonglist(${song.song_id})">添加</button>
+                        </div>
+                    </div>
+                `).join('') : '<p style="color: #888;">暂无歌曲</p>'}
+                
+                <h3 style="margin: 20px 0 15px;">💬 评论 (${album.comment_count})</h3>
+                <div style="margin-bottom: 20px;">
+                    <textarea id="commentContent" placeholder="写下你的评论..." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></textarea>
+                    <button class="btn btn-primary" onclick="submitComment('album', ${album.album_id})" style="margin-top: 10px;">发表评论</button>
+                </div>
+                <div id="commentList">
+                    ${album.comments && album.comments.length > 0 ? album.comments.map(comment => `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <span class="username">${comment.user_name}</span>
+                                <span class="time">${comment.comment_time}</span>
+                            </div>
+                            <div class="content">${comment.content}</div>
+                            <div class="actions">
+                                <button onclick="likeComment(${comment.comment_id})">👍 ${comment.like_count}</button>
+                            </div>
+                        </div>
+                    `).join('') : '<p style="color: #888; text-align: center;">暂无评论</p>'}
+                </div>
+            `;
+        }
+        
+        function closeDetail() {
+            document.getElementById('detailPanel').style.display = 'none';
+            document.getElementById('searchPanel').style.display = 'block';
+            document.getElementById('resultsCard').style.display = 'block';
+        }
+        
+        // 播放歌曲
+        async function playSong(songId) {
+            try {
+                await PlayHistoryAPI.recordPlay(songId, 0);
+                showAlert('开始播放！', 'success');
+            } catch (error) {
+                console.log('记录播放失败:', error);
+            }
+        }
+        
+        // 收藏
+        async function addToFavorite(type, id) {
+            try {
+                await FavoriteAPI.addFavorite(type, id);
+                showAlert('收藏成功！', 'success');
+            } catch (error) {
+                showAlert(error.error || '收藏失败', 'error');
+            }
+        }
+        
+        // 关注歌手
+        async function followSinger(singerId) {
+            try {
+                await UserAPI.followSinger(singerId);
+                showAlert('关注成功！', 'success');
+            } catch (error) {
+                showAlert(error.error || '关注失败', 'error');
+            }
+        }
+        
+        // 显示添加到歌单模态框
+        async function showAddToSonglist(songId) {
+            selectedSongId = songId;
+            document.getElementById('addToSonglistModal').classList.add('active');
+            
+            const container = document.getElementById('songlistList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+            
+            try {
+                const result = await SonglistAPI.listSonglists();
+                if (!result.songlists || result.songlists.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>您还没有创建歌单</p>
+                            <a href="songlist.html" class="btn btn-primary" style="margin-top: 10px;">创建歌单</a>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = result.songlists.map(list => `
+                        <div class="songlist-card" onclick="addSongToSonglist(${list.songlist_id})" style="cursor: pointer;">
+                            <div class="cover">🎵</div>
+                            <div class="info">
+                                <div class="title">${list.songlist_title}</div>
+                                <div class="desc">${list.description || '暂无描述'}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">加载失败</div>`;
+            }
+        }
+        
+        async function addSongToSonglist(songlistId) {
+            try {
+                await SonglistAPI.addSongToSonglist(songlistId, selectedSongId);
+                showAlert('添加成功！', 'success');
+                closeModal();
+            } catch (error) {
+                showAlert(error.error || '添加失败', 'error');
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('addToSonglistModal').classList.remove('active');
+        }
+        
+        // 提交评论
+        async function submitComment(targetType, targetId) {
+            const content = document.getElementById('commentContent').value.trim();
+            if (!content) {
+                showAlert('请输入评论内容', 'error');
+                return;
+            }
+            
+            try {
+                await CommentAPI.publishComment(targetType, targetId, content);
+                showAlert('评论发表成功！', 'success');
+                document.getElementById('commentContent').value = '';
+                // 重新加载详情
+                loadDetail(targetType, targetId);
+            } catch (error) {
+                showAlert(error.error || '评论发表失败', 'error');
+            }
+        }
+        
+        // 点赞评论
+        async function likeComment(commentId) {
+            try {
+                await CommentAPI.likeComment(commentId);
+                showAlert('点赞成功！', 'success');
+            } catch (error) {
+                showAlert(error.error || '点赞失败', 'error');
+            }
+        }
+        
+        // 辅助函数
+        function showLoading(containerId) {
+            document.getElementById(containerId).innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+        }
+        
+        function showError(containerId, message) {
+            document.getElementById(containerId).innerHTML = `<div class="alert alert-error">${message}</div>`;
+        }
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertBox.innerHTML = '', 3000);
+        }
+    </script>
+</body>
+</html>
