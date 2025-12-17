@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 声航音乐</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">🎵 声航音乐</a>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="music.html">音乐中心</a>
+            <a href="songlist.html">我的歌单</a>
+            <a href="favorites.html">我的收藏</a>
+            <a href="history.html">播放记录</a>
+            <a href="profile.html">个人中心</a>
+            <a href="admin.html" class="active">管理后台</a>
+        </div>
+        <div class="user-info">
+            <span id="welcomeText">加载中...</span>
+            <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div id="alertBox"></div>
+        
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2>🛠️ 管理员后台</h2>
+            <p style="margin-top: 10px; opacity: 0.9;">欢迎管理员！您可以在此管理歌手、专辑和歌曲信息。</p>
+        </div>
+        
+        <!-- 标签页 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('singer')">🎤 歌手管理</button>
+            <button class="tab" onclick="switchTab('album')">💿 专辑管理</button>
+            <button class="tab" onclick="switchTab('song')">🎵 歌曲管理</button>
+        </div>
+        
+        <!-- 歌手管理面板 -->
+        <div id="singerPanel">
+            <div class="card">
+                <h3 class="card-title">➕ 添加歌手</h3>
+                <form id="addSingerForm">
+                    <div class="form-group">
+                        <label>歌手名称 *</label>
+                        <input type="text" id="singerName" placeholder="请输入歌手名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label>歌手类型 *</label>
+                        <select id="singerType" required>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                            <option value="组合">组合</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>国籍</label>
+                        <input type="text" id="singerCountry" placeholder="请输入国籍">
+                    </div>
+                    <div class="form-group">
+                        <label>生日</label>
+                        <input type="date" id="singerBirthday">
+                    </div>
+                    <div class="form-group">
+                        <label>歌手简介</label>
+                        <textarea id="singerIntroduction" placeholder="请输入歌手简介" style="height: 100px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">添加歌手</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">🗑️ 删除歌手</h3>
+                <form id="deleteSingerForm">
+                    <div class="form-group">
+                        <label>歌手ID *</label>
+                        <input type="number" id="deleteSingerId" placeholder="请输入歌手ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label>歌手名称 * (确认用)</label>
+                        <input type="text" id="deleteSingerName" placeholder="请输入歌手名称确认" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">删除歌手</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 专辑管理面板 -->
+        <div id="albumPanel" style="display: none;">
+            <div class="card">
+                <h3 class="card-title">➕ 添加专辑</h3>
+                <form id="addAlbumForm">
+                    <div class="form-group">
+                        <label>专辑名称 *</label>
+                        <input type="text" id="albumTitle" placeholder="请输入专辑名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label>所属歌手ID *</label>
+                        <input type="number" id="albumSingerId" placeholder="请输入歌手ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label>发行日期</label>
+                        <input type="date" id="albumReleaseDate">
+                    </div>
+                    <div class="form-group">
+                        <label>封面URL</label>
+                        <input type="text" id="albumCoverUrl" placeholder="请输入封面图片URL">
+                    </div>
+                    <div class="form-group">
+                        <label>专辑描述</label>
+                        <textarea id="albumDescription" placeholder="请输入专辑描述" style="height: 100px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">添加专辑</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">🗑️ 删除专辑</h3>
+                <form id="deleteAlbumForm">
+                    <div class="form-group">
+                        <label>专辑ID *</label>
+                        <input type="number" id="deleteAlbumId" placeholder="请输入专辑ID" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">删除专辑</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 歌曲管理面板 -->
+        <div id="songPanel" style="display: none;">
+            <div class="card">
+                <h3 class="card-title">➕ 添加歌曲</h3>
+                <form id="addSongForm">
+                    <div class="form-group">
+                        <label>歌曲名称 *</label>
+                        <input type="text" id="songTitle" placeholder="请输入歌曲名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label>所属专辑ID *</label>
+                        <input type="number" id="songAlbumId" placeholder="请输入专辑ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label>歌手ID列表 * (多个用逗号分隔)</label>
+                        <input type="text" id="songSingersId" placeholder="例如: 1,2,3" required>
+                    </div>
+                    <div class="form-group">
+                        <label>歌曲时长 * (格式: mm:ss)</label>
+                        <input type="text" id="songDuration" placeholder="例如: 4:30" required pattern="\d+:\d{2}">
+                    </div>
+                    <div class="form-group">
+                        <label>音频文件路径 *</label>
+                        <input type="text" id="songFileUrl" placeholder="请输入音频文件路径" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">添加歌曲</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">🗑️ 删除歌曲</h3>
+                <form id="deleteSongForm">
+                    <div class="form-group">
+                        <label>歌曲ID *</label>
+                        <input type="number" id="deleteSongId" placeholder="请输入歌曲ID" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">删除歌曲</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 检查登录状态和管理员权限
+        if (!UserStore.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        if (!UserStore.isAdmin()) {
+            alert('您没有管理员权限！');
+            window.location.href = 'index.html';
+        }
+        
+        let currentTab = 'singer';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('welcomeText').textContent = '管理员：' + UserStore.getUsername();
+        });
+        
+        // 切换标签页
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach((t, index) => {
+                t.classList.remove('active');
+                if ((tab === 'singer' && index === 0) ||
+                    (tab === 'album' && index === 1) ||
+                    (tab === 'song' && index === 2)) {
+                    t.classList.add('active');
+                }
+            });
+            
+            // 隐藏所有面板
+            document.getElementById('singerPanel').style.display = 'none';
+            document.getElementById('albumPanel').style.display = 'none';
+            document.getElementById('songPanel').style.display = 'none';
+            
+            // 显示对应面板
+            document.getElementById(tab + 'Panel').style.display = 'block';
+        }
+        
+        // ==================== 歌手管理 ====================
+        document.getElementById('addSingerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                singer_name: document.getElementById('singerName').value.trim(),
+                type: document.getElementById('singerType').value
+            };
+            
+            const country = document.getElementById('singerCountry').value.trim();
+            const birthday = document.getElementById('singerBirthday').value;
+            const introduction = document.getElementById('singerIntroduction').value.trim();
+            
+            if (country) data.country = country;
+            if (birthday) data.birthday = birthday;
+            if (introduction) data.introduction = introduction;
+            
+            try {
+                const result = await MusicAPI.adminAddSinger(data);
+                showAlert(result.message || '歌手添加成功！', 'success');
+                document.getElementById('addSingerForm').reset();
+            } catch (error) {
+                showAlert(error.error || '添加失败', 'error');
+            }
+        });
+        
+        document.getElementById('deleteSingerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const singerId = document.getElementById('deleteSingerId').value;
+            const singerName = document.getElementById('deleteSingerName').value.trim();
+            
+            if (!confirm(`确定要删除歌手 "${singerName}" (ID: ${singerId}) 吗？此操作不可恢复！`)) {
+                return;
+            }
+            
+            try {
+                const result = await MusicAPI.adminDeleteSinger(singerId, singerName);
+                showAlert(result.message || '歌手删除成功！', 'success');
+                document.getElementById('deleteSingerForm').reset();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        });
+        
+        // ==================== 专辑管理 ====================
+        document.getElementById('addAlbumForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                album_title: document.getElementById('albumTitle').value.trim(),
+                singer_id: parseInt(document.getElementById('albumSingerId').value)
+            };
+            
+            const releaseDate = document.getElementById('albumReleaseDate').value;
+            const coverUrl = document.getElementById('albumCoverUrl').value.trim();
+            const description = document.getElementById('albumDescription').value.trim();
+            
+            if (releaseDate) data.release_date = releaseDate;
+            if (coverUrl) data.cover_url = coverUrl;
+            if (description) data.description = description;
+            
+            try {
+                const result = await MusicAPI.adminAddAlbum(data);
+                showAlert(result.message || '专辑添加成功！', 'success');
+                document.getElementById('addAlbumForm').reset();
+            } catch (error) {
+                showAlert(error.error || '添加失败', 'error');
+            }
+        });
+        
+        document.getElementById('deleteAlbumForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const albumId = document.getElementById('deleteAlbumId').value;
+            
+            if (!confirm(`确定要删除专辑 (ID: ${albumId}) 吗？此操作不可恢复！`)) {
+                return;
+            }
+            
+            try {
+                const result = await MusicAPI.adminDeleteAlbum(albumId);
+                showAlert(result.message || '专辑删除成功！', 'success');
+                document.getElementById('deleteAlbumForm').reset();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        });
+        
+        // ==================== 歌曲管理 ====================
+        document.getElementById('addSongForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const singersIdStr = document.getElementById('songSingersId').value.trim();
+            const singersId = singersIdStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            
+            if (singersId.length === 0) {
+                showAlert('请输入有效的歌手ID', 'error');
+                return;
+            }
+            
+            const data = {
+                song_title: document.getElementById('songTitle').value.trim(),
+                album_id: parseInt(document.getElementById('songAlbumId').value),
+                singers_id: singersId,
+                duration: document.getElementById('songDuration').value.trim(),
+                file_url: document.getElementById('songFileUrl').value.trim()
+            };
+            
+            try {
+                const result = await MusicAPI.adminAddSong(data);
+                showAlert(result.message || '歌曲添加成功！', 'success');
+                document.getElementById('addSongForm').reset();
+            } catch (error) {
+                showAlert(error.error || '添加失败', 'error');
+            }
+        });
+        
+        document.getElementById('deleteSongForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const songId = document.getElementById('deleteSongId').value;
+            
+            if (!confirm(`确定要删除歌曲 (ID: ${songId}) 吗？此操作不可恢复！`)) {
+                return;
+            }
+            
+            try {
+                const result = await MusicAPI.adminDeleteSong(songId);
+                showAlert(result.message || '歌曲删除成功！', 'success');
+                document.getElementById('deleteSongForm').reset();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertBox.innerHTML = '', 3000);
+        }
+    </script>
+</body>
+</html>

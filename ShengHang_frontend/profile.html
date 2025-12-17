@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 声航音乐</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">🎵 声航音乐</a>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="music.html">音乐中心</a>
+            <a href="songlist.html">我的歌单</a>
+            <a href="favorites.html">我的收藏</a>
+            <a href="history.html">播放记录</a>
+            <a href="profile.html" class="active">个人中心</a>
+        </div>
+        <div class="user-info">
+            <span id="welcomeText">加载中...</span>
+            <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div id="alertBox"></div>
+        
+        <!-- 标签页 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('profile')">👤 个人资料</button>
+            <button class="tab" onclick="switchTab('password')">🔐 修改密码</button>
+            <button class="tab" onclick="switchTab('follow')">👥 关注管理</button>
+            <button class="tab" onclick="switchTab('comments')">💬 我的评论</button>
+        </div>
+        
+        <!-- 个人资料面板 -->
+        <div id="profilePanel">
+            <div class="card">
+                <h3 class="card-title">👤 个人资料</h3>
+                <div id="profileContent" class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">✏️ 编辑资料</h3>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>性别</label>
+                        <select id="editGender">
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>生日</label>
+                        <input type="date" id="editBirthday">
+                    </div>
+                    <div class="form-group">
+                        <label>地区</label>
+                        <input type="text" id="editRegion" placeholder="请输入所在地区">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="editEmail" placeholder="请输入邮箱">
+                    </div>
+                    <div class="form-group">
+                        <label>个人简介</label>
+                        <textarea id="editProfile" placeholder="介绍一下自己吧..." style="height: 100px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                </form>
+            </div>
+            
+            <div class="card" style="border: 1px solid #e74c3c;">
+                <h3 class="card-title" style="color: #e74c3c;">⚠️ 危险操作</h3>
+                <p style="color: #666; margin-bottom: 15px;">注销账号后，您的所有数据将被永久删除且无法恢复。</p>
+                <button class="btn btn-danger" onclick="showDeleteAccountModal()">注销账号</button>
+            </div>
+        </div>
+        
+        <!-- 修改密码面板 -->
+        <div id="passwordPanel" style="display: none;">
+            <div class="card">
+                <h3 class="card-title">🔐 修改密码</h3>
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label>当前密码</label>
+                        <input type="password" id="oldPassword" placeholder="请输入当前密码" required>
+                    </div>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" id="newPassword" placeholder="请输入新密码（至少6位）" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>确认新密码</label>
+                        <input type="password" id="confirmNewPassword" placeholder="请再次输入新密码" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">修改密码</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 关注管理面板 -->
+        <div id="followPanel" style="display: none;">
+            <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card">
+                    <h3 class="card-title">👥 我的关注</h3>
+                    <div id="followingsList" class="loading">
+                        <div class="spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">❤️ 我的粉丝</h3>
+                    <div id="followersList" class="loading">
+                        <div class="spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">🎤 关注的歌手</h3>
+                    <div id="singersList" class="loading">
+                        <div class="spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 我的评论面板 -->
+        <div id="commentsPanel" style="display: none;">
+            <div class="card">
+                <h3 class="card-title">💬 我的评论</h3>
+                <div id="commentsList" class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 注销账号模态框 -->
+    <div class="modal" id="deleteAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚠️ 确认注销账号</h2>
+                <button class="modal-close" onclick="closeDeleteAccountModal()">&times;</button>
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">此操作不可撤销！请输入密码确认注销：</p>
+            <form id="deleteAccountForm">
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="deletePassword" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-danger">确认注销</button>
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteAccountModal()">取消</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 检查登录状态
+        if (!UserStore.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        let currentTab = 'profile';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+            loadProfile();
+        });
+        
+        // 切换标签页
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach((t, index) => {
+                t.classList.remove('active');
+                if ((tab === 'profile' && index === 0) ||
+                    (tab === 'password' && index === 1) ||
+                    (tab === 'follow' && index === 2) ||
+                    (tab === 'comments' && index === 3)) {
+                    t.classList.add('active');
+                }
+            });
+            
+            // 隐藏所有面板
+            document.getElementById('profilePanel').style.display = 'none';
+            document.getElementById('passwordPanel').style.display = 'none';
+            document.getElementById('followPanel').style.display = 'none';
+            document.getElementById('commentsPanel').style.display = 'none';
+            
+            // 显示对应面板
+            document.getElementById(tab + 'Panel').style.display = 'block';
+            
+            // 加载数据
+            switch (tab) {
+                case 'profile':
+                    loadProfile();
+                    break;
+                case 'follow':
+                    loadFollowData();
+                    break;
+                case 'comments':
+                    loadComments();
+                    break;
+            }
+        }
+        
+        // 加载个人资料
+        async function loadProfile() {
+            const container = document.getElementById('profileContent');
+            const userId = UserStore.getUserId();
+            
+            try {
+                const profile = await UserAPI.getProfile(userId);
+                
+                container.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><strong>用户名：</strong>${profile.username}</div>
+                        <div><strong>用户ID：</strong>${profile.user_id}</div>
+                        <div><strong>性别：</strong>${profile.gender || '未设置'}</div>
+                        <div><strong>生日：</strong>${profile.birthday || '未设置'}</div>
+                        <div><strong>地区：</strong>${profile.region || '未设置'}</div>
+                        <div><strong>邮箱：</strong>${profile.email || '未设置'}</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>个人简介：</strong>
+                        <p style="color: #666; margin-top: 5px;">${profile.profile || '这个人很懒，什么都没留下...'}</p>
+                    </div>
+                `;
+                
+                // 填充编辑表单
+                if (profile.gender) document.getElementById('editGender').value = profile.gender;
+                if (profile.birthday) document.getElementById('editBirthday').value = profile.birthday;
+                if (profile.region) document.getElementById('editRegion').value = profile.region;
+                if (profile.email) document.getElementById('editEmail').value = profile.email;
+                if (profile.profile) document.getElementById('editProfile').value = profile.profile;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
+            }
+        }
+        
+        // 编辑资料表单提交
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {};
+            const gender = document.getElementById('editGender').value;
+            const birthday = document.getElementById('editBirthday').value;
+            const region = document.getElementById('editRegion').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const profile = document.getElementById('editProfile').value.trim();
+            
+            if (gender) data.gender = gender;
+            if (birthday) data.birthday = birthday;
+            if (region) data.region = region;
+            if (email) data.email = email;
+            if (profile) data.profile = profile;
+            
+            try {
+                await UserAPI.updateProfile(data);
+                showAlert('资料修改成功！', 'success');
+                loadProfile();
+            } catch (error) {
+                showAlert(error.error || '修改失败', 'error');
+            }
+        });
+        
+        // 修改密码表单提交
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (newPassword.length < 6) {
+                showAlert('新密码长度至少为6位', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmNewPassword) {
+                showAlert('两次输入的新密码不一致', 'error');
+                return;
+            }
+            
+            try {
+                await UserAPI.changePassword(oldPassword, newPassword);
+                showAlert('密码修改成功！', 'success');
+                document.getElementById('passwordForm').reset();
+            } catch (error) {
+                showAlert(error.error || '修改失败', 'error');
+            }
+        });
+        
+        // 加载关注数据
+        async function loadFollowData() {
+            const userId = UserStore.getUserId();
+            
+            // 加载关注列表
+            loadFollowings(userId);
+            loadFollowers(userId);
+            loadFollowSingers(userId);
+        }
+        
+        async function loadFollowings(userId) {
+            const container = document.getElementById('followingsList');
+            
+            try {
+                const result = await UserAPI.getFollowings(userId);
+                
+                if (!result.followings || result.followings.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>还没有关注任何人</p></div>';
+                } else {
+                    container.innerHTML = `
+                        <p style="color: #888; margin-bottom: 10px;">共 ${result.total_count} 人</p>
+                        ${result.followings.map(user => `
+                            <div class="song-item" style="padding: 10px 0;">
+                                <div class="song-info">
+                                    <div class="song-title">${user.user_name}</div>
+                                </div>
+                                <button class="btn btn-small btn-danger" onclick="unfollowUser(${user.user_id})">取消关注</button>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
+            }
+        }
+        
+        async function loadFollowers(userId) {
+            const container = document.getElementById('followersList');
+            
+            try {
+                const result = await UserAPI.getFollowers(userId);
+                
+                if (!result.followers || result.followers.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>还没有粉丝</p></div>';
+                } else {
+                    container.innerHTML = `
+                        <p style="color: #888; margin-bottom: 10px;">共 ${result.total_count} 人</p>
+                        ${result.followers.map(user => `
+                            <div class="song-item" style="padding: 10px 0;">
+                                <div class="song-info">
+                                    <div class="song-title">${user.user_name}</div>
+                                </div>
+                                <button class="btn btn-small btn-secondary" onclick="followUser(${user.user_id})">关注TA</button>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
+            }
+        }
+        
+        async function loadFollowSingers(userId) {
+            const container = document.getElementById('singersList');
+            
+            try {
+                const result = await UserAPI.getFollowSingers(userId);
+                
+                if (!result.follow_singers || result.follow_singers.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>还没有关注歌手</p></div>';
+                } else {
+                    container.innerHTML = `
+                        <p style="color: #888; margin-bottom: 10px;">共 ${result.total_count} 人</p>
+                        ${result.follow_singers.map(singer => `
+                            <div class="song-item" style="padding: 10px 0;">
+                                <div class="song-info">
+                                    <div class="song-title">${singer.singer_name}</div>
+                                </div>
+                                <button class="btn btn-small btn-danger" onclick="unfollowSinger(${singer.singer_id})">取消关注</button>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
+            }
+        }
+        
+        // 关注/取关操作
+        async function followUser(userId) {
+            try {
+                await UserAPI.followUser(userId);
+                showAlert('关注成功！', 'success');
+                loadFollowData();
+            } catch (error) {
+                showAlert(error.error || '关注失败', 'error');
+            }
+        }
+        
+        async function unfollowUser(userId) {
+            try {
+                await UserAPI.unfollowUser(userId);
+                showAlert('取消关注成功！', 'success');
+                loadFollowData();
+            } catch (error) {
+                showAlert(error.error || '取消关注失败', 'error');
+            }
+        }
+        
+        async function unfollowSinger(singerId) {
+            try {
+                await UserAPI.unfollowSinger(singerId);
+                showAlert('取消关注成功！', 'success');
+                loadFollowData();
+            } catch (error) {
+                showAlert(error.error || '取消关注失败', 'error');
+            }
+        }
+        
+        // 加载评论
+        async function loadComments() {
+            const container = document.getElementById('commentsList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+            
+            try {
+                const result = await CommentAPI.listComments();
+                
+                const allComments = [];
+                
+                // 歌曲评论
+                if (result.songs && result.songs.comments) {
+                    result.songs.comments.forEach(c => {
+                        allComments.push({ ...c, type: '歌曲', typeId: c.song_id });
+                    });
+                }
+                
+                // 专辑评论
+                if (result.albums && result.albums.comments) {
+                    result.albums.comments.forEach(c => {
+                        allComments.push({ ...c, type: '专辑', typeId: c.album_id });
+                    });
+                }
+                
+                // 歌单评论
+                if (result.songlists && result.songlists.comments) {
+                    result.songlists.comments.forEach(c => {
+                        allComments.push({ ...c, type: '歌单', typeId: c.songlist_id });
+                    });
+                }
+                
+                if (allComments.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">💬</div>
+                            <p>还没有发表过评论</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <p style="color: #888; margin-bottom: 15px;">共 ${allComments.length} 条评论</p>
+                        ${allComments.map(comment => `
+                            <div class="comment-item">
+                                <div class="comment-header">
+                                    <span style="background: #667eea; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">${comment.type}</span>
+                                    <span class="time">${comment.comment_time}</span>
+                                </div>
+                                <div class="content">${comment.content}</div>
+                                <div class="actions">
+                                    <span>👍 ${comment.like_count}</span>
+                                    <button onclick="deleteComment(${comment.comment_id})">🗑️ 删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
+            }
+        }
+        
+        // 删除评论
+        async function deleteComment(commentId) {
+            if (!confirm('确定要删除这条评论吗？')) {
+                return;
+            }
+            
+            try {
+                await CommentAPI.deleteComment(commentId);
+                showAlert('评论删除成功！', 'success');
+                loadComments();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        }
+        
+        // 注销账号
+        function showDeleteAccountModal() {
+            document.getElementById('deleteAccountModal').classList.add('active');
+        }
+        
+        function closeDeleteAccountModal() {
+            document.getElementById('deleteAccountModal').classList.remove('active');
+            document.getElementById('deleteAccountForm').reset();
+        }
+        
+        document.getElementById('deleteAccountForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('deletePassword').value;
+            
+            try {
+                await UserAPI.deleteAccount(password);
+                showAlert('账号已注销', 'success');
+                UserStore.clearUser();
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } catch (error) {
+                showAlert(error.error || '注销失败', 'error');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertBox.innerHTML = '', 3000);
+        }
+    </script>
+</body>
+</html>

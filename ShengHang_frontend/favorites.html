@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 - 声航音乐</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">🎵 声航音乐</a>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="music.html">音乐中心</a>
+            <a href="songlist.html">我的歌单</a>
+            <a href="favorites.html" class="active">我的收藏</a>
+            <a href="history.html">播放记录</a>
+            <a href="profile.html">个人中心</a>
+        </div>
+        <div class="user-info">
+            <span id="welcomeText">加载中...</span>
+            <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div id="alertBox"></div>
+        
+        <!-- 标签页 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('song')">🎵 收藏的歌曲</button>
+            <button class="tab" onclick="switchTab('album')">💿 收藏的专辑</button>
+            <button class="tab" onclick="switchTab('songlist')">📋 收藏的歌单</button>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;" id="statsCards">
+            <div class="stat-card">
+                <div class="number" id="songCount">-</div>
+                <div class="label">收藏歌曲</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="albumCount">-</div>
+                <div class="label">收藏专辑</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="songlistCount">-</div>
+                <div class="label">收藏歌单</div>
+            </div>
+        </div>
+        
+        <!-- 收藏列表 -->
+        <div class="card">
+            <h3 class="card-title" id="listTitle">🎵 收藏的歌曲</h3>
+            <div id="favoriteList" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 检查登录状态
+        if (!UserStore.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        let currentTab = 'song';
+        let favoritesData = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+            loadFavorites();
+        });
+        
+        // 加载收藏数据
+        async function loadFavorites() {
+            try {
+                favoritesData = await FavoriteAPI.listFavorites();
+                
+                // 更新统计
+                document.getElementById('songCount').textContent = favoritesData.songs?.count || 0;
+                document.getElementById('albumCount').textContent = favoritesData.albums?.count || 0;
+                document.getElementById('songlistCount').textContent = favoritesData.songlists?.count || 0;
+                
+                // 显示当前标签页内容
+                displayCurrentTab();
+                
+            } catch (error) {
+                document.getElementById('favoriteList').innerHTML = `
+                    <div class="alert alert-error">${error.error || '加载失败'}</div>
+                `;
+            }
+        }
+        
+        // 切换标签页
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach((t, index) => {
+                t.classList.remove('active');
+                if ((tab === 'song' && index === 0) ||
+                    (tab === 'album' && index === 1) ||
+                    (tab === 'songlist' && index === 2)) {
+                    t.classList.add('active');
+                }
+            });
+            
+            displayCurrentTab();
+        }
+        
+        // 显示当前标签页内容
+        function displayCurrentTab() {
+            if (!favoritesData) return;
+            
+            const container = document.getElementById('favoriteList');
+            const titleEl = document.getElementById('listTitle');
+            
+            switch (currentTab) {
+                case 'song':
+                    titleEl.textContent = '🎵 收藏的歌曲';
+                    displaySongs(favoritesData.songs);
+                    break;
+                case 'album':
+                    titleEl.textContent = '💿 收藏的专辑';
+                    displayAlbums(favoritesData.albums);
+                    break;
+                case 'songlist':
+                    titleEl.textContent = '📋 收藏的歌单';
+                    displaySonglists(favoritesData.songlists);
+                    break;
+            }
+        }
+        
+        // 显示歌曲列表
+        function displaySongs(data) {
+            const container = document.getElementById('favoriteList');
+            
+            if (!data || !data.items || data.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🎵</div>
+                        <p>还没有收藏歌曲</p>
+                        <a href="music.html" class="btn btn-primary" style="margin-top: 15px;">去发现音乐</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="color: #888; margin-bottom: 15px;">
+                    共 ${data.count} 首歌曲，总时长 ${data.total_duration_formatted}
+                </p>
+                ${data.items.map(song => `
+                    <div class="song-item">
+                        <div class="song-info">
+                            <div class="song-title">${song.song_title}</div>
+                            <div class="song-meta">${song.duration_formatted} · 收藏于 ${song.favorite_time}</div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-small btn-primary" onclick="playSong(${song.song_id})">播放</button>
+                            <button class="btn btn-small btn-secondary" onclick="viewSong(${song.song_id})">详情</button>
+                            <button class="btn btn-small btn-danger" onclick="removeFavorite('song', ${song.song_id})">取消收藏</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        // 显示专辑列表
+        function displayAlbums(data) {
+            const container = document.getElementById('favoriteList');
+            
+            if (!data || !data.items || data.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💿</div>
+                        <p>还没有收藏专辑</p>
+                        <a href="music.html" class="btn btn-primary" style="margin-top: 15px;">去发现音乐</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="color: #888; margin-bottom: 15px;">共 ${data.count} 张专辑</p>
+                ${data.items.map(album => `
+                    <div class="songlist-card">
+                        <div class="cover">💿</div>
+                        <div class="info" onclick="viewAlbum(${album.album_id})" style="cursor: pointer; flex: 1;">
+                            <div class="title">${album.album_title}</div>
+                            <div class="desc">发行日期: ${album.release_date || '未知'}</div>
+                            <div class="stats">收藏于 ${album.favorite_time}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-small btn-danger" onclick="removeFavorite('album', ${album.album_id})">取消收藏</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        // 显示歌单列表
+        function displaySonglists(data) {
+            const container = document.getElementById('favoriteList');
+            
+            if (!data || !data.items || data.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>还没有收藏歌单</p>
+                        <a href="music.html" class="btn btn-primary" style="margin-top: 15px;">去发现音乐</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="color: #888; margin-bottom: 15px;">共 ${data.count} 个歌单</p>
+                ${data.items.map(list => `
+                    <div class="songlist-card">
+                        <div class="cover">🎵</div>
+                        <div class="info" onclick="viewSonglist(${list.songlist_id})" style="cursor: pointer; flex: 1;">
+                            <div class="title">${list.songlist_title}</div>
+                            <div class="stats">收藏于 ${list.favorite_time}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-small btn-danger" onclick="removeFavorite('songlist', ${list.songlist_id})">取消收藏</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        // 播放歌曲
+        async function playSong(songId) {
+            try {
+                await PlayHistoryAPI.recordPlay(songId, 0);
+                showAlert('开始播放！', 'success');
+            } catch (error) {
+                console.log('记录播放失败:', error);
+            }
+        }
+        
+        // 查看详情
+        function viewSong(songId) {
+            window.location.href = `music.html?type=song&id=${songId}`;
+        }
+        
+        function viewAlbum(albumId) {
+            window.location.href = `music.html?type=album&id=${albumId}`;
+        }
+        
+        function viewSonglist(songlistId) {
+            window.location.href = `songlist.html?id=${songlistId}`;
+        }
+        
+        // 取消收藏
+        async function removeFavorite(type, id) {
+            if (!confirm('确定要取消收藏吗？')) {
+                return;
+            }
+            
+            try {
+                await FavoriteAPI.deleteFavorite(type, id);
+                showAlert('取消收藏成功！', 'success');
+                loadFavorites();
+            } catch (error) {
+                showAlert(error.error || '取消收藏失败', 'error');
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertBox.innerHTML = '', 3000);
+        }
+    </script>
+</body>
+</html>

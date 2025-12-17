@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 声航音乐</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>🎵 声航音乐</h1>
+            <p class="subtitle">创建您的账号，开启音乐之旅</p>
+            
+            <div id="alertBox"></div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">用户名 *</label>
+                    <input type="text" id="username" name="username" placeholder="至少4个字符" required minlength="4">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码 *</label>
+                    <input type="password" id="password" name="password" placeholder="至少6个字符" required minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码 *</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="请再次输入密码" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" name="email" placeholder="选填">
+                </div>
+                
+                <div class="form-group">
+                    <label for="gender">性别</label>
+                    <select id="gender" name="gender">
+                        <option value="其他">其他</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="birthday">生日</label>
+                    <input type="date" id="birthday" name="birthday">
+                </div>
+                
+                <div class="form-group">
+                    <label for="region">地区</label>
+                    <input type="text" id="region" name="region" placeholder="选填">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">注 册</button>
+            </form>
+            
+            <div class="links">
+                <p>已有账号？<a href="login.html">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 如果已登录，跳转到首页
+        if (UserStore.isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('email').value.trim();
+            const gender = document.getElementById('gender').value;
+            const birthday = document.getElementById('birthday').value;
+            const region = document.getElementById('region').value.trim();
+            
+            // 验证
+            if (username.length < 4) {
+                showAlert('用户名长度至少为4个字符', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showAlert('密码长度至少为6个字符', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showAlert('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            const userData = {
+                username,
+                password,
+                gender
+            };
+            
+            if (email) userData.email = email;
+            if (birthday) userData.birthday = birthday;
+            if (region) userData.region = region;
+            
+            try {
+                const result = await UserAPI.register(userData);
+                
+                showAlert('注册成功！正在跳转到登录页...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                
+            } catch (error) {
+                showAlert(error.error || '注册失败，请稍后重试', 'error');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alertBox.innerHTML = '';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

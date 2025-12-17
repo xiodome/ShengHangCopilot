@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 声航音乐</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>🎵 声航音乐</h1>
+            <p class="subtitle">欢迎回来，请登录您的账号</p>
+            
+            <div id="alertBox"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">登 录</button>
+            </form>
+            
+            <div class="links">
+                <p>还没有账号？<a href="register.html">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 如果已登录，跳转到首页
+        if (UserStore.isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showAlert('请输入用户名和密码', 'error');
+                return;
+            }
+            
+            try {
+                const result = await UserAPI.login(username, password);
+                
+                // 保存用户信息
+                UserStore.setUser(result.user_id, result.username, result.is_admin);
+                
+                showAlert('登录成功！正在跳转...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+                
+            } catch (error) {
+                showAlert(error.error || '登录失败，请检查用户名和密码', 'error');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alertBox.innerHTML = '';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

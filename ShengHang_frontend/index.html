@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声航音乐 - 首页</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">🎵 声航音乐</a>
+        <div class="nav-links">
+            <a href="index.html">首页</a>
+            <a href="music.html">音乐中心</a>
+            <a href="songlist.html">我的歌单</a>
+            <a href="favorites.html">我的收藏</a>
+            <a href="history.html">播放记录</a>
+            <a href="profile.html">个人中心</a>
+            <span id="adminLink" style="display: none;"><a href="admin.html">管理后台</a></span>
+        </div>
+        <div class="user-info">
+            <span id="welcomeText">加载中...</span>
+            <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div id="alertBox"></div>
+        
+        <!-- 欢迎区域 -->
+        <div class="card">
+            <h2 style="margin-bottom: 15px;">👋 欢迎来到声航音乐</h2>
+            <p style="color: #666;">发现好音乐，分享好心情。在这里，您可以搜索歌曲、创建歌单、收藏喜爱的音乐。</p>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+            <div class="stat-card">
+                <div class="number" id="playCountWeek">-</div>
+                <div class="label">本周播放</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="favoriteCount">-</div>
+                <div class="label">收藏歌曲</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="songlistCount">-</div>
+                <div class="label">我的歌单</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="followingCount">-</div>
+                <div class="label">关注数</div>
+            </div>
+        </div>
+        
+        <!-- 快速搜索 -->
+        <div class="card">
+            <h3 class="card-title">🔍 快速搜索</h3>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索歌曲、歌手、专辑...">
+                <select id="searchType" style="padding: 12px; border-radius: 25px; border: 1px solid #ddd;">
+                    <option value="song">歌曲</option>
+                    <option value="singer">歌手</option>
+                    <option value="album">专辑</option>
+                    <option value="songlist">歌单</option>
+                </select>
+                <button onclick="performSearch()">搜索</button>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+        
+        <!-- 播放报告 -->
+        <div class="card">
+            <h3 class="card-title">📊 本周听歌报告</h3>
+            <div id="weekReport" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+        
+        <!-- 最爱歌曲 -->
+        <div class="card">
+            <h3 class="card-title">❤️ 我最常听的歌曲</h3>
+            <div id="topSongs" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 检查登录状态
+        if (!UserStore.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage();
+        });
+        
+        async function initPage() {
+            // 更新欢迎文字
+            document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+            
+            // 显示管理员链接
+            if (UserStore.isAdmin()) {
+                document.getElementById('adminLink').style.display = 'inline';
+            }
+            
+            // 加载数据
+            loadStats();
+            loadWeekReport();
+            loadTopSongs();
+        }
+        
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                // 播放报告
+                const report = await PlayHistoryAPI.getPlayReport('week');
+                document.getElementById('playCountWeek').textContent = report.report.total_plays || 0;
+                
+                // 收藏
+                const favorites = await FavoriteAPI.listFavorites();
+                document.getElementById('favoriteCount').textContent = favorites.songs?.count || 0;
+                
+                // 歌单
+                const songlists = await SonglistAPI.listSonglists();
+                document.getElementById('songlistCount').textContent = songlists.total || 0;
+                
+                // 关注
+                const userId = UserStore.getUserId();
+                const followings = await UserAPI.getFollowings(userId);
+                document.getElementById('followingCount').textContent = followings.total_count || 0;
+                
+            } catch (error) {
+                console.log('加载统计数据失败:', error);
+            }
+        }
+        
+        // 加载本周报告
+        async function loadWeekReport() {
+            try {
+                const report = await PlayHistoryAPI.getPlayReport('week');
+                const container = document.getElementById('weekReport');
+                
+                if (report.report.total_plays === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🎧</div>
+                            <p>本周还没有播放记录，快去听听音乐吧！</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                            <div>
+                                <p style="font-size: 14px; color: #888;">播放次数</p>
+                                <p style="font-size: 28px; font-weight: bold; color: #667eea;">${report.report.total_plays}</p>
+                            </div>
+                            <div>
+                                <p style="font-size: 14px; color: #888;">总时长</p>
+                                <p style="font-size: 28px; font-weight: bold; color: #667eea;">${report.report.total_duration_minutes} 分钟</p>
+                            </div>
+                            ${report.report.top_song ? `
+                            <div>
+                                <p style="font-size: 14px; color: #888;">最爱歌曲</p>
+                                <p style="font-size: 18px; font-weight: bold; color: #333;">🎵 ${report.report.top_song.song_title}</p>
+                                <p style="font-size: 12px; color: #888;">播放 ${report.report.top_song.play_times} 次</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('weekReport').innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无播放数据</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 加载最爱歌曲
+        async function loadTopSongs() {
+            try {
+                const result = await PlayHistoryAPI.getUserTopCharts('song', 5);
+                const container = document.getElementById('topSongs');
+                
+                if (!result.list || result.list.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🎵</div>
+                            <p>还没有播放记录</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = result.list.map((song, index) => `
+                        <div class="song-item">
+                            <div style="width: 30px; text-align: center; font-weight: bold; color: ${index < 3 ? '#667eea' : '#888'};">
+                                ${index + 1}
+                            </div>
+                            <div class="song-info">
+                                <div class="song-title">${song.song_title}</div>
+                                <div class="song-meta">播放 ${song.my_play_count} 次</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn btn-small btn-secondary" onclick="viewSong(${song.song_id})">查看</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('topSongs').innerHTML = `
+                    <div class="empty-state">
+                        <p>加载失败</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 搜索功能
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            const type = document.getElementById('searchType').value;
+            
+            if (!query) {
+                showAlert('请输入搜索关键词', 'error');
+                return;
+            }
+            
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>搜索中...</p></div>';
+            
+            try {
+                let result;
+                switch (type) {
+                    case 'song':
+                        result = await MusicAPI.searchSong({ song_title: query });
+                        displaySongResults(result.songs || []);
+                        break;
+                    case 'singer':
+                        result = await MusicAPI.searchSinger({ singer_name: query });
+                        displaySingerResults(result.singers || []);
+                        break;
+                    case 'album':
+                        result = await MusicAPI.searchAlbum({ album_title: query });
+                        displayAlbumResults(result.albums || []);
+                        break;
+                    case 'songlist':
+                        result = await SonglistAPI.searchSonglist(query);
+                        displaySonglistResults(result.songlists || []);
+                        break;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">搜索失败: ${error.error || '请稍后重试'}</div>`;
+            }
+        }
+        
+        function displaySongResults(songs) {
+            const container = document.getElementById('searchResults');
+            if (songs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">未找到相关歌曲</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="margin-bottom: 15px; color: #666;">找到 ${songs.length} 首歌曲</p>
+                ${songs.map(song => `
+                    <div class="song-item">
+                        <div class="song-info">
+                            <div class="song-title">${song.song_title}</div>
+                            <div class="song-meta">
+                                ${song.singers ? song.singers.map(s => s.singer_name).join(', ') : ''} · 
+                                ${song.album_title} · ${song.duration_formatted}
+                            </div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-small btn-primary" onclick="viewSong(${song.song_id})">查看</button>
+                            <button class="btn btn-small btn-secondary" onclick="addToFavorite('song', ${song.song_id})">收藏</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function displaySingerResults(singers) {
+            const container = document.getElementById('searchResults');
+            if (singers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">未找到相关歌手</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="margin-bottom: 15px; color: #666;">找到 ${singers.length} 位歌手</p>
+                ${singers.map(singer => `
+                    <div class="song-item">
+                        <div class="song-info">
+                            <div class="song-title">${singer.singer_name}</div>
+                            <div class="song-meta">${singer.type} · ${singer.country || '未知'}</div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-small btn-primary" onclick="viewSinger(${singer.singer_id})">查看</button>
+                            <button class="btn btn-small btn-secondary" onclick="followSinger(${singer.singer_id})">关注</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function displayAlbumResults(albums) {
+            const container = document.getElementById('searchResults');
+            if (albums.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">未找到相关专辑</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="margin-bottom: 15px; color: #666;">找到 ${albums.length} 张专辑</p>
+                ${albums.map(album => `
+                    <div class="song-item">
+                        <div class="song-info">
+                            <div class="song-title">${album.album_title}</div>
+                            <div class="song-meta">${album.singer_name} · ${album.release_date || '未知'}</div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-small btn-primary" onclick="viewAlbum(${album.album_id})">查看</button>
+                            <button class="btn btn-small btn-secondary" onclick="addToFavorite('album', ${album.album_id})">收藏</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function displaySonglistResults(songlists) {
+            const container = document.getElementById('searchResults');
+            if (songlists.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">未找到相关歌单</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <p style="margin-bottom: 15px; color: #666;">找到 ${songlists.length} 个歌单</p>
+                ${songlists.map(list => `
+                    <div class="songlist-card">
+                        <div class="cover">🎵</div>
+                        <div class="info">
+                            <div class="title">${list.songlist_title}</div>
+                            <div class="desc">创建者: ${list.user_name}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-small btn-primary" onclick="viewSonglist(${list.songlist_id})">查看</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        // 操作函数
+        function viewSong(songId) {
+            window.location.href = `music.html?type=song&id=${songId}`;
+        }
+        
+        function viewSinger(singerId) {
+            window.location.href = `music.html?type=singer&id=${singerId}`;
+        }
+        
+        function viewAlbum(albumId) {
+            window.location.href = `music.html?type=album&id=${albumId}`;
+        }
+        
+        function viewSonglist(songlistId) {
+            window.location.href = `songlist.html?id=${songlistId}`;
+        }
+        
+        async function addToFavorite(type, id) {
+            try {
+                await FavoriteAPI.addFavorite(type, id);
+                showAlert('收藏成功！', 'success');
+            } catch (error) {
+                showAlert(error.error || '收藏失败', 'error');
+            }
+        }
+        
+        async function followSinger(singerId) {
+            try {
+                await UserAPI.followSinger(singerId);
+                showAlert('关注成功！', 'success');
+            } catch (error) {
+                showAlert(error.error || '关注失败', 'error');
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertBox.innerHTML = '', 3000);
+        }
+        
+        // 回车搜索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>
