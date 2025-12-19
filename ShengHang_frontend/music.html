@@ -908,7 +908,10 @@
         // 属性转义
         function escapeAttr(str) {
             if (!str) return '';
-            return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+            return String(str)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"');
         }
         
         // 显示编辑歌手模态框
