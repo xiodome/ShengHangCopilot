@@ -36,15 +36,17 @@
         
         <!-- 标签页 -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('singer')">🎤 歌手管理</button>
-            <button class="tab" onclick="switchTab('album')">💿 专辑管理</button>
-            <button class="tab" onclick="switchTab('song')">🎵 歌曲管理</button>
+            <button class="tab active" onclick="switchTab('singer')">🎤 添加歌手</button>
+            <button class="tab" onclick="switchTab('logs')">📋 系统日志</button>
+            <button class="tab" onclick="switchTab('stats')">📊 用户统计</button>
+            <button class="tab" onclick="switchTab('comments')">💬 评论审核</button>
         </div>
         
-        <!-- 歌手管理面板 -->
+        <!-- 歌手管理面板 (只保留添加功能) -->
         <div id="singerPanel">
             <div class="card">
                 <h3 class="card-title">➕ 添加歌手</h3>
+                <p style="color: #666; margin-bottom: 15px;">💡 提示：歌手的删除和修改请到音乐中心对应歌手详情页进行操作</p>
                 <form id="addSingerForm">
                     <div class="form-group">
                         <label>歌手名称 *</label>
@@ -73,102 +75,62 @@
                     <button type="submit" class="btn btn-primary">添加歌手</button>
                 </form>
             </div>
-            
+        </div>
+        
+        <!-- 系统日志面板 -->
+        <div id="logsPanel" style="display: none;">
             <div class="card">
-                <h3 class="card-title">🗑️ 删除歌手</h3>
-                <form id="deleteSingerForm">
-                    <div class="form-group">
-                        <label>歌手ID *</label>
-                        <input type="number" id="deleteSingerId" placeholder="请输入歌手ID" required>
-                    </div>
-                    <div class="form-group">
-                        <label>歌手名称 * (确认用)</label>
-                        <input type="text" id="deleteSingerName" placeholder="请输入歌手名称确认" required>
-                    </div>
-                    <button type="submit" class="btn btn-danger">删除歌手</button>
-                </form>
+                <h3 class="card-title">📋 系统日志</h3>
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="logTableFilter">
+                        <option value="">全部表</option>
+                        <option value="Singer">歌手</option>
+                        <option value="Album">专辑</option>
+                        <option value="Song">歌曲</option>
+                        <option value="User">用户</option>
+                        <option value="Comment">评论</option>
+                    </select>
+                    <select id="logResultFilter">
+                        <option value="">全部结果</option>
+                        <option value="success">成功</option>
+                        <option value="fail">失败</option>
+                    </select>
+                    <input type="text" id="logKeyword" placeholder="搜索关键词" style="flex: 1;">
+                    <button class="btn btn-primary" onclick="loadSystemLogs()">搜索</button>
+                </div>
+                <div id="logsContent">
+                    <p style="color: #888; text-align: center;">点击搜索查看日志</p>
+                </div>
+                <div id="logsPagination" style="margin-top: 15px; text-align: center;"></div>
             </div>
         </div>
         
-        <!-- 专辑管理面板 -->
-        <div id="albumPanel" style="display: none;">
+        <!-- 用户统计面板 -->
+        <div id="statsPanel" style="display: none;">
             <div class="card">
-                <h3 class="card-title">➕ 添加专辑</h3>
-                <form id="addAlbumForm">
-                    <div class="form-group">
-                        <label>专辑名称 *</label>
-                        <input type="text" id="albumTitle" placeholder="请输入专辑名称" required>
-                    </div>
-                    <div class="form-group">
-                        <label>所属歌手ID *</label>
-                        <input type="number" id="albumSingerId" placeholder="请输入歌手ID" required>
-                    </div>
-                    <div class="form-group">
-                        <label>发行日期</label>
-                        <input type="date" id="albumReleaseDate">
-                    </div>
-                    <div class="form-group">
-                        <label>封面URL</label>
-                        <input type="text" id="albumCoverUrl" placeholder="请输入封面图片URL">
-                    </div>
-                    <div class="form-group">
-                        <label>专辑描述</label>
-                        <textarea id="albumDescription" placeholder="请输入专辑描述" style="height: 100px;"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">添加专辑</button>
-                </form>
-            </div>
-            
-            <div class="card">
-                <h3 class="card-title">🗑️ 删除专辑</h3>
-                <form id="deleteAlbumForm">
-                    <div class="form-group">
-                        <label>专辑ID *</label>
-                        <input type="number" id="deleteAlbumId" placeholder="请输入专辑ID" required>
-                    </div>
-                    <button type="submit" class="btn btn-danger">删除专辑</button>
-                </form>
+                <h3 class="card-title">📊 用户行为统计</h3>
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+                    <label>时间范围：</label>
+                    <input type="date" id="statsStartDate">
+                    <span>至</span>
+                    <input type="date" id="statsEndDate">
+                    <button class="btn btn-primary" onclick="loadUserStats()">查询</button>
+                </div>
+                <div id="statsContent">
+                    <p style="color: #888; text-align: center;">点击查询获取统计数据</p>
+                </div>
             </div>
         </div>
         
-        <!-- 歌曲管理面板 -->
-        <div id="songPanel" style="display: none;">
+        <!-- 评论审核面板 -->
+        <div id="commentsPanel" style="display: none;">
             <div class="card">
-                <h3 class="card-title">➕ 添加歌曲</h3>
-                <form id="addSongForm">
-                    <div class="form-group">
-                        <label>歌曲名称 *</label>
-                        <input type="text" id="songTitle" placeholder="请输入歌曲名称" required>
-                    </div>
-                    <div class="form-group">
-                        <label>所属专辑ID *</label>
-                        <input type="number" id="songAlbumId" placeholder="请输入专辑ID" required>
-                    </div>
-                    <div class="form-group">
-                        <label>歌手ID列表 * (多个用逗号分隔)</label>
-                        <input type="text" id="songSingersId" placeholder="例如: 1,2,3" required>
-                    </div>
-                    <div class="form-group">
-                        <label>歌曲时长 * (格式: mm:ss)</label>
-                        <input type="text" id="songDuration" placeholder="例如: 4:30" required pattern="\d+:\d{2}">
-                    </div>
-                    <div class="form-group">
-                        <label>音频文件路径 *</label>
-                        <input type="text" id="songFileUrl" placeholder="请输入音频文件路径" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">添加歌曲</button>
-                </form>
-            </div>
-            
-            <div class="card">
-                <h3 class="card-title">🗑️ 删除歌曲</h3>
-                <form id="deleteSongForm">
-                    <div class="form-group">
-                        <label>歌曲ID *</label>
-                        <input type="number" id="deleteSongId" placeholder="请输入歌曲ID" required>
-                    </div>
-                    <button type="submit" class="btn btn-danger">删除歌曲</button>
-                </form>
+                <h3 class="card-title">💬 待审核评论</h3>
+                <button class="btn btn-secondary" onclick="loadPendingComments()" style="margin-bottom: 15px;">刷新列表</button>
+                <div id="pendingComments">
+                    <p style="color: #888; text-align: center;">加载中...</p>
+                </div>
+                <div id="commentsPagination" style="margin-top: 15px; text-align: center;"></div>
             </div>
         </div>
     </div>
@@ -201,19 +163,26 @@
             document.querySelectorAll('.tab').forEach((t, index) => {
                 t.classList.remove('active');
                 if ((tab === 'singer' && index === 0) ||
-                    (tab === 'album' && index === 1) ||
-                    (tab === 'song' && index === 2)) {
+                    (tab === 'logs' && index === 1) ||
+                    (tab === 'stats' && index === 2) ||
+                    (tab === 'comments' && index === 3)) {
                     t.classList.add('active');
                 }
             });
             
             // 隐藏所有面板
             document.getElementById('singerPanel').style.display = 'none';
-            document.getElementById('albumPanel').style.display = 'none';
-            document.getElementById('songPanel').style.display = 'none';
+            document.getElementById('logsPanel').style.display = 'none';
+            document.getElementById('statsPanel').style.display = 'none';
+            document.getElementById('commentsPanel').style.display = 'none';
             
             // 显示对应面板
             document.getElementById(tab + 'Panel').style.display = 'block';
+            
+            // 加载数据
+            if (tab === 'logs') loadSystemLogs();
+            if (tab === 'stats') initStatsDateRange();
+            if (tab === 'comments') loadPendingComments();
         }
         
         // ==================== 歌手管理 ====================
@@ -242,115 +211,216 @@
             }
         });
         
-        document.getElementById('deleteSingerForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const singerId = document.getElementById('deleteSingerId').value;
-            const singerName = document.getElementById('deleteSingerName').value.trim();
-            
-            if (!confirm(`确定要删除歌手 "${singerName}" (ID: ${singerId}) 吗？此操作不可恢复！`)) {
-                return;
-            }
-            
-            try {
-                const result = await AdministratorAPI.adminDeleteSinger(singerId, singerName);
-                showAlert(result.message || '歌手删除成功！', 'success');
-                document.getElementById('deleteSingerForm').reset();
-            } catch (error) {
-                showAlert(error.error || '删除失败', 'error');
-            }
-        });
+        // ==================== 系统日志 ====================
+        let logsPage = 1;
         
-        // ==================== 专辑管理 ====================
-        document.getElementById('addAlbumForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        async function loadSystemLogs(page = 1) {
+            logsPage = page;
+            const container = document.getElementById('logsContent');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
             
-            const data = {
-                album_title: document.getElementById('albumTitle').value.trim(),
-                singer_id: parseInt(document.getElementById('albumSingerId').value)
+            const filters = {
+                page: page,
+                page_size: 20
             };
             
-            const releaseDate = document.getElementById('albumReleaseDate').value;
-            const coverUrl = document.getElementById('albumCoverUrl').value.trim();
-            const description = document.getElementById('albumDescription').value.trim();
+            const tableFilter = document.getElementById('logTableFilter').value;
+            const resultFilter = document.getElementById('logResultFilter').value;
+            const keyword = document.getElementById('logKeyword').value.trim();
             
-            if (releaseDate) data.release_date = releaseDate;
-            if (coverUrl) data.cover_url = coverUrl;
-            if (description) data.description = description;
+            if (tableFilter) filters.target_table = tableFilter;
+            if (resultFilter) filters.result = resultFilter;
+            if (keyword) filters.keyword = keyword;
             
             try {
-                const result = await AdministratorAPI.adminAddAlbum(data);
-                showAlert(result.message || '专辑添加成功！', 'success');
-                document.getElementById('addAlbumForm').reset();
+                const result = await AdministratorAPI.getSystemLogs(filters);
+                
+                if (!result.data || result.data.length === 0) {
+                    container.innerHTML = '<p style="color: #888; text-align: center;">暂无日志记录</p>';
+                } else {
+                    container.innerHTML = `
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f5f5f5;">
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">ID</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">操作</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">目标表</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">目标ID</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">结果</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.data.map(log => `
+                                    <tr>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${log.log_id}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${log.action}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${log.target_table || '-'}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${log.target_id || '-'}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                                            <span style="color: ${log.result === 'success' ? 'green' : 'red'}">${log.result}</span>
+                                        </td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${log.action_time}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                // 分页
+                const pagination = result.pagination;
+                document.getElementById('logsPagination').innerHTML = `
+                    <span>第 ${pagination.current_page} / ${pagination.total_pages} 页 (共 ${pagination.total_count} 条)</span>
+                    ${pagination.current_page > 1 ? `<button class="btn btn-small btn-secondary" onclick="loadSystemLogs(${pagination.current_page - 1})">上一页</button>` : ''}
+                    ${pagination.current_page < pagination.total_pages ? `<button class="btn btn-small btn-secondary" onclick="loadSystemLogs(${pagination.current_page + 1})">下一页</button>` : ''}
+                `;
             } catch (error) {
-                showAlert(error.error || '添加失败', 'error');
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
             }
-        });
+        }
         
-        document.getElementById('deleteAlbumForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // ==================== 用户统计 ====================
+        function initStatsDateRange() {
+            const today = new Date();
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
             
-            const albumId = document.getElementById('deleteAlbumId').value;
-            
-            if (!confirm(`确定要删除专辑 (ID: ${albumId}) 吗？此操作不可恢复！`)) {
-                return;
-            }
-            
-            try {
-                const result = await AdministratorAPI.adminDeleteAlbum(albumId);
-                showAlert(result.message || '专辑删除成功！', 'success');
-                document.getElementById('deleteAlbumForm').reset();
-            } catch (error) {
-                showAlert(error.error || '删除失败', 'error');
-            }
-        });
+            document.getElementById('statsStartDate').value = sevenDaysAgo.toISOString().split('T')[0];
+            document.getElementById('statsEndDate').value = today.toISOString().split('T')[0];
+        }
         
-        // ==================== 歌曲管理 ====================
-        document.getElementById('addSongForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        async function loadUserStats() {
+            const container = document.getElementById('statsContent');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
             
-            const singersIdStr = document.getElementById('songSingersId').value.trim();
-            const singersId = singersIdStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-            
-            if (singersId.length === 0) {
-                showAlert('请输入有效的歌手ID', 'error');
-                return;
-            }
-            
-            const data = {
-                song_title: document.getElementById('songTitle').value.trim(),
-                album_id: parseInt(document.getElementById('songAlbumId').value),
-                singers_id: singersId,
-                duration: document.getElementById('songDuration').value.trim(),
-                file_url: document.getElementById('songFileUrl').value.trim()
-            };
+            const startDate = document.getElementById('statsStartDate').value;
+            const endDate = document.getElementById('statsEndDate').value;
             
             try {
-                const result = await AdministratorAPI.adminAddSong(data);
-                showAlert(result.message || '歌曲添加成功！', 'success');
-                document.getElementById('addSongForm').reset();
+                const result = await AdministratorAPI.getUserBehaviorStats({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+                
+                const summary = result.summary || {};
+                const topUsers = result.top_active_users || [];
+                
+                container.innerHTML = `
+                    <h4 style="margin-bottom: 15px;">📈 数据概览</h4>
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px;">
+                        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${summary.new_users || 0}</div>
+                            <div style="color: #666;">新增用户</div>
+                        </div>
+                        <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #388e3c;">${summary.total_plays || 0}</div>
+                            <div style="color: #666;">播放次数</div>
+                        </div>
+                        <div style="background: #fff3e0; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #f57c00;">${summary.total_comments || 0}</div>
+                            <div style="color: #666;">评论数</div>
+                        </div>
+                        <div style="background: #fce4ec; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #c2185b;">${summary.total_favorites || 0}</div>
+                            <div style="color: #666;">收藏数</div>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #7b1fa2;">${summary.new_songlists || 0}</div>
+                            <div style="color: #666;">新建歌单</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px;">🏆 活跃用户排行 (Top 10)</h4>
+                    ${topUsers.length > 0 ? `
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f5f5f5;">
+                                    <th style="padding: 10px; text-align: left;">排名</th>
+                                    <th style="padding: 10px; text-align: left;">用户名</th>
+                                    <th style="padding: 10px; text-align: left;">邮箱</th>
+                                    <th style="padding: 10px; text-align: left;">播放次数</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${topUsers.map((user, index) => `
+                                    <tr>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${index + 1}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${user.user_name}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${user.email || '-'}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${user.play_count}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p style="color: #888;">暂无数据</p>'}
+                `;
             } catch (error) {
-                showAlert(error.error || '添加失败', 'error');
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
             }
-        });
+        }
         
-        document.getElementById('deleteSongForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const songId = document.getElementById('deleteSongId').value;
-            
-            if (!confirm(`确定要删除歌曲 (ID: ${songId}) 吗？此操作不可恢复！`)) {
-                return;
-            }
+        // ==================== 评论审核 ====================
+        let commentsPage = 1;
+        
+        async function loadPendingComments(page = 1) {
+            commentsPage = page;
+            const container = document.getElementById('pendingComments');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
             
             try {
-                const result = await AdministratorAPI.adminDeleteSong(songId);
-                showAlert(result.message || '歌曲删除成功！', 'success');
-                document.getElementById('deleteSongForm').reset();
+                const result = await AdministratorAPI.getPendingComments(page, 20);
+                
+                if (!result.pending_comments || result.pending_comments.length === 0) {
+                    container.innerHTML = '<p style="color: #888; text-align: center;">暂无待审核评论 🎉</p>';
+                } else {
+                    container.innerHTML = result.pending_comments.map(comment => `
+                        <div class="comment-item" style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <div>
+                                    <strong>${comment.user_name}</strong>
+                                    <span style="background: ${comment.status === '举报中' ? '#ffebee' : '#fff3e0'}; color: ${comment.status === '举报中' ? '#c62828' : '#ef6c00'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">${comment.status}</span>
+                                </div>
+                                <span style="color: #888; font-size: 12px;">${comment.comment_time}</span>
+                            </div>
+                            <div style="margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px;">${comment.content}</div>
+                            <div style="color: #888; font-size: 12px; margin-bottom: 10px;">
+                                目标: ${comment.target_type} #${comment.target_id} | 用户ID: ${comment.user_id} | 用户状态: ${comment.user_status}
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-small btn-primary" onclick="auditComment(${comment.comment_id}, 'pass')">✓ 通过</button>
+                                <button class="btn btn-small btn-danger" onclick="auditComment(${comment.comment_id}, 'reject', false)">✗ 删除评论</button>
+                                <button class="btn btn-small btn-danger" onclick="auditComment(${comment.comment_id}, 'reject', true)">🚫 删除并封禁用户</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // 分页
+                const total = result.total || 0;
+                const totalPages = Math.ceil(total / 20);
+                document.getElementById('commentsPagination').innerHTML = `
+                    <span>第 ${page} / ${totalPages || 1} 页 (共 ${total} 条)</span>
+                    ${page > 1 ? `<button class="btn btn-small btn-secondary" onclick="loadPendingComments(${page - 1})">上一页</button>` : ''}
+                    ${page < totalPages ? `<button class="btn btn-small btn-secondary" onclick="loadPendingComments(${page + 1})">下一页</button>` : ''}
+                `;
             } catch (error) {
-                showAlert(error.error || '删除失败', 'error');
+                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
             }
-        });
+        }
+        
+        async function auditComment(commentId, result, banUser = false) {
+            const actionText = result === 'pass' ? '通过' : (banUser ? '删除并封禁用户' : '删除');
+            if (!confirm(`确定要${actionText}此评论吗？`)) return;
+            
+            try {
+                await AdministratorAPI.auditComment(commentId, result, banUser);
+                showAlert(`评论已${actionText}`, 'success');
+                loadPendingComments(commentsPage);
+            } catch (error) {
+                showAlert(error.error || '操作失败', 'error');
+            }
+        }
         
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');

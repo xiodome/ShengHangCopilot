@@ -53,6 +53,19 @@
                     <label>专辑名称</label>
                     <input type="text" id="songAlbum" placeholder="输入专辑名称">
                 </div>
+                <div class="form-group">
+                    <label>排序方式</label>
+                    <select id="songOrder">
+                        <option value="">默认</option>
+                        <option value="song_title">歌曲名称</option>
+                        <option value="duration">时长</option>
+                        <option value="play_count">播放次数</option>
+                    </select>
+                    <select id="songDirection" style="margin-left: 10px;">
+                        <option value="asc">升序</option>
+                        <option value="desc">降序</option>
+                    </select>
+                </div>
                 <button class="btn btn-primary" onclick="searchSongs()">搜索歌曲</button>
             </div>
             
@@ -76,6 +89,18 @@
                     <label>国籍</label>
                     <input type="text" id="singerCountry" placeholder="输入国籍">
                 </div>
+                <div class="form-group">
+                    <label>排序方式</label>
+                    <select id="singerOrder">
+                        <option value="">默认(名称)</option>
+                        <option value="songs">歌曲数量</option>
+                        <option value="followers">粉丝数量</option>
+                    </select>
+                    <select id="singerDirection" style="margin-left: 10px;">
+                        <option value="asc">升序</option>
+                        <option value="desc">降序</option>
+                    </select>
+                </div>
                 <button class="btn btn-primary" onclick="searchSingers()">搜索歌手</button>
             </div>
             
@@ -89,6 +114,18 @@
                 <div class="form-group">
                     <label>歌手名称</label>
                     <input type="text" id="albumSinger" placeholder="输入歌手名称">
+                </div>
+                <div class="form-group">
+                    <label>排序方式</label>
+                    <select id="albumOrder">
+                        <option value="">默认(名称)</option>
+                        <option value="release_date">发行日期</option>
+                        <option value="songs_count">歌曲数量</option>
+                    </select>
+                    <select id="albumDirection" style="margin-left: 10px;">
+                        <option value="asc">升序</option>
+                        <option value="desc">降序</option>
+                    </select>
                 </div>
                 <button class="btn btn-primary" onclick="searchAlbums()">搜索专辑</button>
             </div>
@@ -118,6 +155,168 @@
                 <div class="spinner"></div>
                 <p>加载中...</p>
             </div>
+        </div>
+    </div>
+    
+    <!-- 编辑歌手模态框 -->
+    <div class="modal" id="editSingerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑歌手</h2>
+                <button class="modal-close" onclick="closeAdminModal('editSingerModal')">&times;</button>
+            </div>
+            <form id="editSingerForm">
+                <input type="hidden" id="editSingerId">
+                <div class="form-group">
+                    <label>歌手名称 *</label>
+                    <input type="text" id="editSingerName" required>
+                </div>
+                <div class="form-group">
+                    <label>歌手类型 *</label>
+                    <select id="editSingerType" required>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="组合">组合</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>国籍</label>
+                    <input type="text" id="editSingerCountry">
+                </div>
+                <div class="form-group">
+                    <label>生日</label>
+                    <input type="date" id="editSingerBirthday">
+                </div>
+                <div class="form-group">
+                    <label>简介</label>
+                    <textarea id="editSingerIntro" style="height: 80px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 添加专辑模态框 -->
+    <div class="modal" id="addAlbumModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加专辑</h2>
+                <button class="modal-close" onclick="closeAdminModal('addAlbumModal')">&times;</button>
+            </div>
+            <form id="addAlbumForm">
+                <input type="hidden" id="addAlbumSingerId">
+                <div class="form-group">
+                    <label>专辑名称 *</label>
+                    <input type="text" id="addAlbumTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>发行日期</label>
+                    <input type="date" id="addAlbumReleaseDate">
+                </div>
+                <div class="form-group">
+                    <label>封面URL</label>
+                    <input type="text" id="addAlbumCoverUrl" placeholder="输入封面图片URL">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="addAlbumDescription" style="height: 80px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">添加专辑</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 编辑专辑模态框 -->
+    <div class="modal" id="editAlbumModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑专辑</h2>
+                <button class="modal-close" onclick="closeAdminModal('editAlbumModal')">&times;</button>
+            </div>
+            <form id="editAlbumForm">
+                <input type="hidden" id="editAlbumId">
+                <div class="form-group">
+                    <label>专辑名称 *</label>
+                    <input type="text" id="editAlbumTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>歌手ID *</label>
+                    <input type="number" id="editAlbumSingerId" required>
+                </div>
+                <div class="form-group">
+                    <label>发行日期</label>
+                    <input type="date" id="editAlbumReleaseDate">
+                </div>
+                <div class="form-group">
+                    <label>封面URL</label>
+                    <input type="text" id="editAlbumCoverUrl">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="editAlbumDescription" style="height: 80px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 添加歌曲模态框 -->
+    <div class="modal" id="addSongModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加歌曲</h2>
+                <button class="modal-close" onclick="closeAdminModal('addSongModal')">&times;</button>
+            </div>
+            <form id="addSongForm">
+                <input type="hidden" id="addSongAlbumId">
+                <div class="form-group">
+                    <label>歌曲名称 *</label>
+                    <input type="text" id="addSongTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>歌手ID列表 * (多个用逗号分隔)</label>
+                    <input type="text" id="addSongSingersId" placeholder="例如: 1,2,3" required>
+                </div>
+                <div class="form-group">
+                    <label>时长 * (格式: mm:ss)</label>
+                    <input type="text" id="addSongDuration" placeholder="例如: 4:30" required pattern="\d+:\d{2}">
+                </div>
+                <div class="form-group">
+                    <label>音频文件URL *</label>
+                    <input type="text" id="addSongFileUrl" placeholder="输入音频文件URL" required>
+                </div>
+                <button type="submit" class="btn btn-primary">添加歌曲</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 编辑歌曲模态框 -->
+    <div class="modal" id="editSongModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑歌曲</h2>
+                <button class="modal-close" onclick="closeAdminModal('editSongModal')">&times;</button>
+            </div>
+            <form id="editSongForm">
+                <input type="hidden" id="editSongId">
+                <div class="form-group">
+                    <label>歌曲名称 *</label>
+                    <input type="text" id="editSongTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>所属专辑ID *</label>
+                    <input type="number" id="editSongAlbumId" required>
+                </div>
+                <div class="form-group">
+                    <label>时长 (格式: mm:ss)</label>
+                    <input type="text" id="editSongDuration" pattern="\d+:\d{2}">
+                </div>
+                <div class="form-group">
+                    <label>音频文件URL</label>
+                    <input type="text" id="editSongFileUrl">
+                </div>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </form>
         </div>
     </div>
 
@@ -182,10 +381,14 @@
             const title = document.getElementById('songTitle').value.trim();
             const singer = document.getElementById('songSinger').value.trim();
             const album = document.getElementById('songAlbum').value.trim();
+            const order = document.getElementById('songOrder').value;
+            const direction = document.getElementById('songDirection').value;
             
             if (title) filters.song_title = title;
             if (singer) filters.singer_name = singer;
             if (album) filters.album_title = album;
+            if (order) filters.order = order;
+            if (direction) filters.direction = direction;
             
             showLoading('results');
             document.getElementById('resultsCard').style.display = 'block';
@@ -205,10 +408,14 @@
             const name = document.getElementById('singerName').value.trim();
             const type = document.getElementById('singerType').value;
             const country = document.getElementById('singerCountry').value.trim();
+            const order = document.getElementById('singerOrder').value;
+            const direction = document.getElementById('singerDirection').value;
             
             if (name) filters.singer_name = name;
             if (type) filters.type = type;
             if (country) filters.country = country;
+            if (order) filters.order = order;
+            if (direction) filters.direction = direction;
             
             showLoading('results');
             document.getElementById('resultsCard').style.display = 'block';
@@ -227,9 +434,13 @@
             const filters = {};
             const title = document.getElementById('albumTitle').value.trim();
             const singer = document.getElementById('albumSinger').value.trim();
+            const order = document.getElementById('albumOrder').value;
+            const direction = document.getElementById('albumDirection').value;
             
             if (title) filters.album_title = title;
             if (singer) filters.singer_name = singer;
+            if (order) filters.order = order;
+            if (direction) filters.direction = direction;
             
             showLoading('results');
             document.getElementById('resultsCard').style.display = 'block';
@@ -359,10 +570,25 @@
                         <p><strong>时长:</strong> ${song.duration_formatted}</p>
                     </div>
                 </div>
+                
+                <!-- 音频播放器 -->
+                ${song.file_url ? `
+                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <audio id="audioPlayer" controls style="width: 100%;">
+                        <source src="${song.file_url}" type="audio/mpeg">
+                        您的浏览器不支持音频播放
+                    </audio>
+                </div>
+                ` : ''}
+                
                 <div style="margin-bottom: 20px;">
-                    <button class="btn btn-primary" onclick="playSong(${song.song_id})">▶️ 播放</button>
+                    <button class="btn btn-primary" onclick="playSongWithAudio(${song.song_id}, '${escapeAttr(song.file_url || '')}')">▶️ 播放</button>
                     <button class="btn btn-secondary" onclick="addToFavorite('song', ${song.song_id})">❤️ 收藏</button>
                     <button class="btn btn-secondary" onclick="showAddToSonglist(${song.song_id})">➕ 添加到歌单</button>
+                    ${UserStore.isAdmin() ? `
+                    <button class="btn btn-secondary" onclick="showEditSongModal(${song.song_id}, '${escapeAttr(song.song_title)}', ${song.album_id}, '${song.duration_formatted}', '${escapeAttr(song.file_url || '')}')">✏️ 编辑歌曲</button>
+                    <button class="btn btn-danger" onclick="deleteSong(${song.song_id})">🗑️ 删除歌曲</button>
+                    ` : ''}
                 </div>
                 
                 <h3 style="margin: 20px 0 15px;">💬 评论 (${song.comment_count})</h3>
@@ -374,12 +600,19 @@
                     ${song.comments && song.comments.length > 0 ? song.comments.map(comment => `
                         <div class="comment-item">
                             <div class="comment-header">
-                                <span class="username">${comment.user_name}</span>
+                                <span class="username" style="cursor: pointer;" onclick="viewUserProfile(${comment.user_id})">${comment.user_name}</span>
                                 <span class="time">${comment.comment_time}</span>
                             </div>
                             <div class="content">${comment.content}</div>
                             <div class="actions">
                                 <button onclick="likeComment(${comment.comment_id})">👍 ${comment.like_count}</button>
+                                <button onclick="showReplyForm(${comment.comment_id}, 'song', ${song.song_id})">💬 回复</button>
+                                <button onclick="reportComment(${comment.comment_id})">🚨 举报</button>
+                            </div>
+                            <div id="replyForm_${comment.comment_id}" style="display: none; margin-top: 10px; padding-left: 20px;">
+                                <textarea id="replyContent_${comment.comment_id}" placeholder="回复评论..." style="width: 100%; height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+                                <button class="btn btn-small btn-primary" onclick="submitReply(${comment.comment_id}, 'song', ${song.song_id})" style="margin-top: 5px;">发送回复</button>
+                                <button class="btn btn-small btn-secondary" onclick="hideReplyForm(${comment.comment_id})" style="margin-top: 5px;">取消</button>
                             </div>
                         </div>
                     `).join('') : '<p style="color: #888; text-align: center;">暂无评论</p>'}
@@ -400,6 +633,11 @@
                 </div>
                 <div style="margin-bottom: 20px;">
                     <button class="btn btn-primary" onclick="followSinger(${singer.singer_id})">➕ 关注歌手</button>
+                    ${UserStore.isAdmin() ? `
+                    <button class="btn btn-secondary" onclick="showEditSingerModal(${singer.singer_id}, '${escapeAttr(singer.singer_name)}', '${singer.type}', '${escapeAttr(singer.country || '')}', '${singer.birthday || ''}', '${escapeAttr(singer.introduction || '')}')">✏️ 编辑歌手</button>
+                    <button class="btn btn-danger" onclick="deleteSinger(${singer.singer_id}, '${escapeAttr(singer.singer_name)}')">🗑️ 删除歌手</button>
+                    <button class="btn btn-secondary" onclick="showAddAlbumModal(${singer.singer_id})">➕ 添加专辑</button>
+                    ` : ''}
                 </div>
                 
                 <h3 style="margin: 20px 0 15px;">💿 专辑列表 (${singer.album_count})</h3>
@@ -432,6 +670,7 @@
             const container = document.getElementById('detailContent');
             container.innerHTML = `
                 <h2 style="margin-bottom: 20px;">💿 ${album.album_title}</h2>
+                ${album.cover_url ? `<img src="${album.cover_url}" alt="封面" style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 20px;">` : ''}
                 <div style="margin-bottom: 20px;">
                     <p><strong>歌手:</strong> <a href="#" onclick="viewSingerDetail(${album.singer_id})">${album.singer_name}</a></p>
                     <p><strong>发行日期:</strong> ${album.release_date || '未知'}</p>
@@ -441,6 +680,11 @@
                 </div>
                 <div style="margin-bottom: 20px;">
                     <button class="btn btn-secondary" onclick="addToFavorite('album', ${album.album_id})">❤️ 收藏专辑</button>
+                    ${UserStore.isAdmin() ? `
+                    <button class="btn btn-secondary" onclick="showEditAlbumModal(${album.album_id}, '${escapeAttr(album.album_title)}', ${album.singer_id}, '${album.release_date || ''}', '${escapeAttr(album.cover_url || '')}', '${escapeAttr(album.description || '')}')">✏️ 编辑专辑</button>
+                    <button class="btn btn-danger" onclick="deleteAlbum(${album.album_id})">🗑️ 删除专辑</button>
+                    <button class="btn btn-secondary" onclick="showAddSongModal(${album.album_id})">➕ 添加歌曲</button>
+                    ` : ''}
                 </div>
                 
                 <h3 style="margin: 20px 0 15px;">🎵 歌曲列表</h3>
@@ -455,6 +699,7 @@
                         <div class="song-actions">
                             <button class="btn btn-small btn-primary" onclick="event.stopPropagation(); playSong(${song.song_id})">播放</button>
                             <button class="btn btn-small btn-secondary" onclick="event.stopPropagation(); showAddToSonglist(${song.song_id})">添加</button>
+                            ${UserStore.isAdmin() ? `<button class="btn btn-small btn-danger" onclick="event.stopPropagation(); deleteSong(${song.song_id})">删除</button>` : ''}
                         </div>
                     </div>
                 `).join('') : '<p style="color: #888;">暂无歌曲</p>'}
@@ -468,12 +713,19 @@
                     ${album.comments && album.comments.length > 0 ? album.comments.map(comment => `
                         <div class="comment-item">
                             <div class="comment-header">
-                                <span class="username">${comment.user_name}</span>
+                                <span class="username" style="cursor: pointer;" onclick="viewUserProfile(${comment.user_id})">${comment.user_name}</span>
                                 <span class="time">${comment.comment_time}</span>
                             </div>
                             <div class="content">${comment.content}</div>
                             <div class="actions">
                                 <button onclick="likeComment(${comment.comment_id})">👍 ${comment.like_count}</button>
+                                <button onclick="showReplyForm(${comment.comment_id}, 'album', ${album.album_id})">💬 回复</button>
+                                <button onclick="reportComment(${comment.comment_id})">🚨 举报</button>
+                            </div>
+                            <div id="replyForm_${comment.comment_id}" style="display: none; margin-top: 10px; padding-left: 20px;">
+                                <textarea id="replyContent_${comment.comment_id}" placeholder="回复评论..." style="width: 100%; height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+                                <button class="btn btn-small btn-primary" onclick="submitReply(${comment.comment_id}, 'album', ${album.album_id})" style="margin-top: 5px;">发送回复</button>
+                                <button class="btn btn-small btn-secondary" onclick="hideReplyForm(${comment.comment_id})" style="margin-top: 5px;">取消</button>
                             </div>
                         </div>
                     `).join('') : '<p style="color: #888; text-align: center;">暂无评论</p>'}
@@ -590,6 +842,306 @@
                 showAlert('点赞成功！', 'success');
             } catch (error) {
                 showAlert(error.error || '点赞失败', 'error');
+            }
+        }
+        
+        // 显示回复表单
+        function showReplyForm(commentId, targetType, targetId) {
+            const form = document.getElementById(`replyForm_${commentId}`);
+            if (form) {
+                form.style.display = 'block';
+            }
+        }
+        
+        // 隐藏回复表单
+        function hideReplyForm(commentId) {
+            const form = document.getElementById(`replyForm_${commentId}`);
+            if (form) {
+                form.style.display = 'none';
+            }
+        }
+        
+        // 提交回复
+        async function submitReply(parentId, targetType, targetId) {
+            const content = document.getElementById(`replyContent_${parentId}`).value.trim();
+            if (!content) {
+                showAlert('请输入回复内容', 'error');
+                return;
+            }
+            
+            try {
+                await CommentAPI.publishComment(targetType, targetId, content, parentId);
+                showAlert('回复发表成功！', 'success');
+                hideReplyForm(parentId);
+                loadDetail(targetType, targetId);
+            } catch (error) {
+                showAlert(error.error || '回复发表失败', 'error');
+            }
+        }
+        
+        // 举报评论
+        async function reportComment(commentId) {
+            if (!confirm('确定要举报这条评论吗？')) {
+                return;
+            }
+            
+            try {
+                await CommentAPI.reportComment(commentId);
+                showAlert('举报成功，我们将尽快处理', 'success');
+            } catch (error) {
+                showAlert(error.error || '举报失败', 'error');
+            }
+        }
+        
+        // 查看用户资料
+        function viewUserProfile(userId) {
+            window.location.href = `profile.html?user_id=${userId}`;
+        }
+        
+        // ==================== 管理员功能 ====================
+        
+        // 关闭管理员模态框
+        function closeAdminModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // 属性转义
+        function escapeAttr(str) {
+            if (!str) return '';
+            return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+        
+        // 显示编辑歌手模态框
+        function showEditSingerModal(id, name, type, country, birthday, intro) {
+            document.getElementById('editSingerId').value = id;
+            document.getElementById('editSingerName').value = name;
+            document.getElementById('editSingerType').value = type;
+            document.getElementById('editSingerCountry').value = country;
+            document.getElementById('editSingerBirthday').value = birthday;
+            document.getElementById('editSingerIntro').value = intro;
+            document.getElementById('editSingerModal').classList.add('active');
+        }
+        
+        // 编辑歌手表单提交
+        document.getElementById('editSingerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                singer_id: document.getElementById('editSingerId').value,
+                singer_name: document.getElementById('editSingerName').value.trim(),
+                type: document.getElementById('editSingerType').value
+            };
+            const country = document.getElementById('editSingerCountry').value.trim();
+            const birthday = document.getElementById('editSingerBirthday').value;
+            const intro = document.getElementById('editSingerIntro').value.trim();
+            if (country) data.country = country;
+            if (birthday) data.birthday = birthday;
+            if (intro) data.introduction = intro;
+            
+            try {
+                await AdministratorAPI.adminUpdateSinger(data);
+                showAlert('歌手信息修改成功！', 'success');
+                closeAdminModal('editSingerModal');
+                loadDetail('singer', data.singer_id);
+            } catch (error) {
+                showAlert(error.error || '修改失败', 'error');
+            }
+        });
+        
+        // 删除歌手
+        async function deleteSinger(singerId, singerName) {
+            if (!confirm(`确定要删除歌手 "${singerName}" 吗？此操作不可恢复！`)) return;
+            try {
+                await AdministratorAPI.adminDeleteSinger(singerId, singerName);
+                showAlert('歌手删除成功！', 'success');
+                closeDetail();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        }
+        
+        // 显示添加专辑模态框
+        function showAddAlbumModal(singerId) {
+            document.getElementById('addAlbumSingerId').value = singerId;
+            document.getElementById('addAlbumTitle').value = '';
+            document.getElementById('addAlbumReleaseDate').value = '';
+            document.getElementById('addAlbumCoverUrl').value = '';
+            document.getElementById('addAlbumDescription').value = '';
+            document.getElementById('addAlbumModal').classList.add('active');
+        }
+        
+        // 添加专辑表单提交
+        document.getElementById('addAlbumForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const singerId = document.getElementById('addAlbumSingerId').value;
+            const data = {
+                album_title: document.getElementById('addAlbumTitle').value.trim(),
+                singer_id: parseInt(singerId)
+            };
+            const releaseDate = document.getElementById('addAlbumReleaseDate').value;
+            const coverUrl = document.getElementById('addAlbumCoverUrl').value.trim();
+            const description = document.getElementById('addAlbumDescription').value.trim();
+            if (releaseDate) data.release_date = releaseDate;
+            if (coverUrl) data.cover_url = coverUrl;
+            if (description) data.description = description;
+            
+            try {
+                await AdministratorAPI.adminAddAlbum(data);
+                showAlert('专辑添加成功！', 'success');
+                closeAdminModal('addAlbumModal');
+                loadDetail('singer', singerId);
+            } catch (error) {
+                showAlert(error.error || '添加失败', 'error');
+            }
+        });
+        
+        // 显示编辑专辑模态框
+        function showEditAlbumModal(id, title, singerId, releaseDate, coverUrl, description) {
+            document.getElementById('editAlbumId').value = id;
+            document.getElementById('editAlbumTitle').value = title;
+            document.getElementById('editAlbumSingerId').value = singerId;
+            document.getElementById('editAlbumReleaseDate').value = releaseDate;
+            document.getElementById('editAlbumCoverUrl').value = coverUrl;
+            document.getElementById('editAlbumDescription').value = description;
+            document.getElementById('editAlbumModal').classList.add('active');
+        }
+        
+        // 编辑专辑表单提交
+        document.getElementById('editAlbumForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const albumId = document.getElementById('editAlbumId').value;
+            const data = {
+                album_id: albumId,
+                album_title: document.getElementById('editAlbumTitle').value.trim(),
+                singer_id: parseInt(document.getElementById('editAlbumSingerId').value)
+            };
+            const releaseDate = document.getElementById('editAlbumReleaseDate').value;
+            const coverUrl = document.getElementById('editAlbumCoverUrl').value.trim();
+            const description = document.getElementById('editAlbumDescription').value.trim();
+            if (releaseDate) data.release_date = releaseDate;
+            if (coverUrl) data.cover_url = coverUrl;
+            if (description) data.description = description;
+            
+            try {
+                await AdministratorAPI.adminUpdateAlbum(data);
+                showAlert('专辑信息修改成功！', 'success');
+                closeAdminModal('editAlbumModal');
+                loadDetail('album', albumId);
+            } catch (error) {
+                showAlert(error.error || '修改失败', 'error');
+            }
+        });
+        
+        // 删除专辑
+        async function deleteAlbum(albumId) {
+            if (!confirm('确定要删除此专辑吗？此操作不可恢复！')) return;
+            try {
+                await AdministratorAPI.adminDeleteAlbum(albumId);
+                showAlert('专辑删除成功！', 'success');
+                closeDetail();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        }
+        
+        // 显示添加歌曲模态框
+        function showAddSongModal(albumId) {
+            document.getElementById('addSongAlbumId').value = albumId;
+            document.getElementById('addSongTitle').value = '';
+            document.getElementById('addSongSingersId').value = '';
+            document.getElementById('addSongDuration').value = '';
+            document.getElementById('addSongFileUrl').value = '';
+            document.getElementById('addSongModal').classList.add('active');
+        }
+        
+        // 添加歌曲表单提交
+        document.getElementById('addSongForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const albumId = document.getElementById('addSongAlbumId').value;
+            const singersIdStr = document.getElementById('addSongSingersId').value.trim();
+            const singersId = singersIdStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            
+            if (singersId.length === 0) {
+                showAlert('请输入有效的歌手ID', 'error');
+                return;
+            }
+            
+            const data = {
+                song_title: document.getElementById('addSongTitle').value.trim(),
+                album_id: parseInt(albumId),
+                singers_id: singersId,
+                duration: document.getElementById('addSongDuration').value.trim(),
+                file_url: document.getElementById('addSongFileUrl').value.trim()
+            };
+            
+            try {
+                await AdministratorAPI.adminAddSong(data);
+                showAlert('歌曲添加成功！', 'success');
+                closeAdminModal('addSongModal');
+                loadDetail('album', albumId);
+            } catch (error) {
+                showAlert(error.error || '添加失败', 'error');
+            }
+        });
+        
+        // 显示编辑歌曲模态框
+        function showEditSongModal(id, title, albumId, duration, fileUrl) {
+            document.getElementById('editSongId').value = id;
+            document.getElementById('editSongTitle').value = title;
+            document.getElementById('editSongAlbumId').value = albumId;
+            document.getElementById('editSongDuration').value = duration;
+            document.getElementById('editSongFileUrl').value = fileUrl;
+            document.getElementById('editSongModal').classList.add('active');
+        }
+        
+        // 编辑歌曲表单提交
+        document.getElementById('editSongForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const songId = document.getElementById('editSongId').value;
+            const data = {
+                song_id: songId,
+                song_title: document.getElementById('editSongTitle').value.trim(),
+                album_id: parseInt(document.getElementById('editSongAlbumId').value)
+            };
+            const duration = document.getElementById('editSongDuration').value.trim();
+            const fileUrl = document.getElementById('editSongFileUrl').value.trim();
+            if (duration) data.duration = duration;
+            if (fileUrl) data.file_url = fileUrl;
+            
+            try {
+                await AdministratorAPI.adminUpdateSong(data);
+                showAlert('歌曲信息修改成功！', 'success');
+                closeAdminModal('editSongModal');
+                loadDetail('song', songId);
+            } catch (error) {
+                showAlert(error.error || '修改失败', 'error');
+            }
+        });
+        
+        // 删除歌曲
+        async function deleteSong(songId) {
+            if (!confirm('确定要删除此歌曲吗？此操作不可恢复！')) return;
+            try {
+                await AdministratorAPI.adminDeleteSong(songId);
+                showAlert('歌曲删除成功！', 'success');
+                closeDetail();
+            } catch (error) {
+                showAlert(error.error || '删除失败', 'error');
+            }
+        }
+        
+        // 带音频播放的播放功能
+        async function playSongWithAudio(songId, fileUrl) {
+            try {
+                await PlayHistoryAPI.recordPlay(songId, 0);
+                if (fileUrl) {
+                    const player = document.getElementById('audioPlayer');
+                    if (player) {
+                        player.play();
+                    }
+                }
+                showAlert('开始播放！', 'success');
+            } catch (error) {
+                console.log('记录播放失败:', error);
             }
         }
         
