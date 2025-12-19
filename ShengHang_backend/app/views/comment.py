@@ -5,7 +5,9 @@ from django.views.decorators.csrf import csrf_exempt
 from .tools import *
 
 
-# 发布评论 / 回复评论
+# ================================
+# 1. 发布评论 / 回复评论
+# ================================
 @csrf_exempt
 def publish_comment(request):
     if request.method != "POST":
@@ -42,7 +44,10 @@ def publish_comment(request):
     return json_cn({"message": "评论发布成功"})
 
 
-# 删除评论 (支持删除自己的，以及歌单创建者删除自己歌单下的评论)
+# ================================
+# 2. 删除评论 
+# ================================
+# (支持删除自己的，以及歌单创建者删除自己歌单下的评论)
 @csrf_exempt
 def delete_comment(request):
     if request.method != "POST":
@@ -121,8 +126,9 @@ def delete_comment(request):
         return json_cn({"error": "删除失败，数据库错误"}, 500)
 
 
-
-# 对评论进行点赞 / 举报
+# ================================
+# 3. 对评论进行点赞 / 举报 
+# ================================
 @csrf_exempt
 def action_comment(request):
     if request.method != "POST":
@@ -155,7 +161,9 @@ def action_comment(request):
         return json_cn({"error": "无效操作"}, 400)
 
 
-# 查看歌曲/专辑/歌单的评论列表 (GET)
+# ================================
+# 4. 查看歌曲/专辑/歌单的评论列表 
+# ================================
 # 支持按热度(like_count)或时间(comment_time)排序
 def get_comments_by_target(request):
     if request.method != "GET":
@@ -199,7 +207,9 @@ def get_comments_by_target(request):
     return json_cn({"comments": comments, "count": len(comments)})
 
 
-# 查看单条评论及其回复
+# ================================
+# 5. 查看单条评论及其回复 
+# ================================
 def get_comment_detail(request):
     if request.method != "GET":
         return json_cn({"error": "GET required"}, 400)
@@ -253,7 +263,9 @@ def get_comment_detail(request):
     })
 
 
-# 查看自己发布的评论
+# ================================
+# 6. 查看自己发布的评论
+# ================================ 
 def get_my_comments(request):
     if request.method != "GET":
         return json_cn({"error": "GET required"}, 400)
@@ -277,7 +289,9 @@ def get_my_comments(request):
     return json_cn({"my_comments": comments})
 
 
-# 评论统计信息 (GET)
+# ================================
+# 7. 查看评论统计信息
+# ================================ 
 # 显示某对象的总评论数、最热评论
 def get_comment_stats(request):
     if request.method != "GET":
@@ -324,7 +338,7 @@ def get_comment_stats(request):
 
 
 # ==========================
-# 个人评论列表(按类型分组)
+# 8. 个人评论列表(按类型分组)
 # ==========================
 @csrf_exempt
 def list_comment(request):
@@ -454,27 +468,4 @@ def list_comment(request):
             "count": songlist_count,
             "comments": songlist_comments
         }
-    })
-
-
-# ================================
-# 点赞评论
-# ================================
-@csrf_exempt
-def like_comment(request, comment_id):
-    if request.method != "POST":
-        return json_cn({"error": "POST required"}, 400)
-
-    sql = """
-        UPDATE Comment
-        SET like_count = like_count + 1
-        WHERE comment_id = %s;
-    """
-
-    with connection.cursor() as cursor:
-        cursor.execute(sql, [comment_id])
-
-    return json_cn({
-        "message": "点赞成功",
-        "comment_id": comment_id
     })

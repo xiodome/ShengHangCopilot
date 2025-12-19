@@ -1,11 +1,11 @@
 # app/urls.py
 from django.urls import path
 from app.views import user as user
-from app.views import playhistory as ph
 from app.views import music as music
 from app.views import favoriteAndSonglist as favorite
 from app.views import comment as comment
-
+from app.views import playhistory as ph
+from app.views import manager as manager
 
 from django.http import HttpResponse
 
@@ -36,16 +36,10 @@ urlpatterns = [
 
     # 歌手与音乐管理模块
     path("music/", music.music),
-    path("Administrator/singer/admin_add_singer/", music.admin_add_singer),
-    path("Administrator/singer/admin_delete_singer/", music.admin_delete_singer),
     path("singer/search_singer/", music.search_singer),
     path("singer/profile/<int:singer_id>/", music.singer_profile),
-    path("Administrator/album/admin_add_album/", music.admin_add_album),
-    path("Administrator/album/admin_delete_album/", music.admin_delete_album),
     path("album/search_album/", music.search_album),
     path("album/profile/<int:album_id>/", music.album_profile),
-    path("Administrator/song/admin_add_song/", music.admin_add_song),
-    path("Administrator/song/admin_delete_song/", music.admin_delete_song),
     path("song/search_song/", music.search_song),
     path("song/profile/<int:song_id>/", music.song_profile),
 
@@ -70,7 +64,6 @@ urlpatterns = [
     path("comment/list_comment/", comment.list_comment),
     path("comment/publish_comment/", comment.publish_comment),
     path("comment/delete_comment/", comment.delete_comment),
-    path("comment/like_comment/<int:comment_id>/", comment.like_comment),
     path("comment/action_comment/", comment.action_comment),
     path("comment/get_comments_by_target/", comment.get_comments_by_target),
     path("comment/get_comment_detail/", comment.get_comment_detail),
@@ -84,4 +77,13 @@ urlpatterns = [
     path("playHistory/get_play_report/", ph.get_play_report),
     path("playHistory/get_user_top_charts/", ph.get_user_top_charts),
     path("playHistory/get_user_activity_trend/", ph.get_user_activity_trend),
+
+
+    # 管理员管理模块
+    path("Administrator/singer/admin_add_singer/", manager.admin_add_singer),
+    path("Administrator/singer/admin_delete_singer/", manager.admin_delete_singer),
+    path("Administrator/album/admin_add_album/", manager.admin_add_album),
+    path("Administrator/album/admin_add_album/", manager.admin_delete_album),
+    path("Administrator/song/admin_add_song/", manager.admin_add_song),
+    path("Administrator/song/admin_delete_song/", manager.admin_delete_song),
 ]

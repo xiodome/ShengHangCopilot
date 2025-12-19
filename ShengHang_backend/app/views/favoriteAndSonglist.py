@@ -145,7 +145,6 @@ def create_songlist(request):
 # ================================
 # 3. 编辑歌单
 # ================================
-# http://127.0.0.1:8000/songlist/edit_songlist/1/
 @csrf_exempt
 def edit_songlist(request, songlist_id):
     # --------------------------
@@ -236,7 +235,6 @@ def edit_songlist(request, songlist_id):
 # ================================
 # 4. 歌单详情
 # ================================
-# http://127.0.0.1:8000/songlist/profile/2/
 @csrf_exempt
 def songlist_profile(request, songlist_id):
     # --------------------------
@@ -370,7 +368,6 @@ def songlist_profile(request, songlist_id):
 # ================================
 # 5. 删除歌单
 # ================================
-# http://127.0.0.1:8000/songlist/delete_songlist/1/
 @csrf_exempt
 def delete_songlist(request, songlist_id):
     # --------------------------
@@ -426,7 +423,6 @@ def delete_songlist(request, songlist_id):
 # ================================
 # 6. 向歌单插入歌曲
 # ================================
-# http://127.0.0.1:8000/songlist/2/add_song
 @csrf_exempt
 def songlist_add_song(request, songlist_id):
     # --------------------------
@@ -526,7 +522,6 @@ def songlist_add_song(request, songlist_id):
 # ================================
 # 7. 删除歌单中的歌曲
 # ================================
-# http://127.0.0.1:8000/songlist/2/delete_song/6
 @csrf_exempt
 def songlist_delete_song(request, songlist_id, song_id):
     # --------------------------
@@ -606,7 +601,6 @@ def songlist_delete_song(request, songlist_id, song_id):
 # ================================
 # 8. 对歌单中的歌曲排序
 # ================================
-# http://127.0.0.1:8000/songlist/sort_songlist/2
 @csrf_exempt
 def sort_songlist(request, songlist_id):
     # --------------------------
@@ -710,9 +704,8 @@ def sort_songlist(request, songlist_id):
 
 
 # ==========================
-# 10. 搜索歌单
+# 9. 搜索歌单
 # ==========================
-# http://127.0.0.1:8000/songlist/search_songlist/
 @csrf_exempt
 def search_songlist(request):
     # --------------------------
@@ -785,9 +778,8 @@ def search_songlist(request):
 
 
 # ================================
-# 11.点赞歌单
+# 10.点赞歌单
 # ================================
-# /songlist/like_songlist/<songlist_id>/
 @csrf_exempt
 def like_songlist(request, songlist_id):
         
@@ -808,9 +800,8 @@ def like_songlist(request, songlist_id):
 
 
 # ==========================
-# 12. 个人收藏
+# 11. 个人收藏
 # ==========================
-# http://127.0.0.1:8000/favorite/list_favorite
 @csrf_exempt
 def list_favorite(request):
     # --------------------------
@@ -844,9 +835,9 @@ def list_favorite(request):
     song_total_duration = sum([s[2] for s in songs]) if songs else 0
 
 
-    # ========================================================
+    # --------------------------
     # 3. 获取收藏的专辑
-    # ========================================================
+    # --------------------------
     sql_album = """
         SELECT 
             al.album_id,
@@ -865,9 +856,9 @@ def list_favorite(request):
 
     album_count = len(albums)
 
-    # ========================================================
+    # --------------------------
     # 4. 获取收藏的歌单
-    # ========================================================
+    # --------------------------
     sql_songlist = """
         SELECT 
             sl.songlist_id,
@@ -885,9 +876,9 @@ def list_favorite(request):
 
     songlist_count = len(songlists)
 
-    # ========================================================
+    # --------------------------
     # 5. 格式化返回数据
-    # ========================================================
+    # --------------------------
 
     # ---------- 收藏歌曲 ----------
     favorite_songs = []
@@ -942,7 +933,7 @@ def list_favorite(request):
 
 
 # ================================
-# 13. 进行收藏操作
+# 12. 进行收藏操作
 # ================================
 @csrf_exempt
 def add_favorite(request):
@@ -1010,7 +1001,7 @@ def add_favorite(request):
 
 
 # ================================
-# 14. 取消收藏
+# 13. 取消收藏
 # ================================
 @csrf_exempt
 def delete_favorite(request):
@@ -1077,7 +1068,7 @@ def delete_favorite(request):
 
 
 # ================================
-# 15. "我收藏的歌曲" 统计
+# 14. "我收藏的歌曲" 统计
 # ================================
 def get_my_favorite_songs_stats(request):
     """
@@ -1130,7 +1121,7 @@ def get_my_favorite_songs_stats(request):
 
 
 # ================================
-# 16. 平台收藏排行榜
+# 15. 平台收藏排行榜
 # ================================
 def get_platform_top_favorites(request):
     if request.method != "POST":

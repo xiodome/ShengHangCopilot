@@ -2,7 +2,7 @@
 
 这是声航音乐服务系统的前端部分，使用纯HTML + CSS + JavaScript实现。
 
-## 项目结构
+## 结构
 
 ```
 ShengHang_frontend/
@@ -76,37 +76,7 @@ ShengHang_frontend/
 - 专辑管理（添加/删除）
 - 歌曲管理（添加/删除）
 
-## 使用方法
 
-### 1. 启动后端服务
-
-首先需要启动Django后端服务：
-
-```bash
-python manage.py runserver
-```
-
-### 2. 启动前端服务
-
-启动前端服务：
-
-```bash
-python -m http.server 3000
-```
-
-### 3. 访问前端页面
-
-```bash
-# 访问 http://127.0.0.1:3000
-```
-
-### 3. 配置API地址
-
-如果后端不是运行在 `http://127.0.0.1:8000`，需要修改 `js/api.js` 中的 `API_BASE_URL`：
-
-```javascript
-const API_BASE_URL = 'http://your-backend-url:port';
-```
 
 ## 注意事项
 
@@ -117,7 +87,7 @@ const API_BASE_URL = 'http://your-backend-url:port';
 
 2. **Session认证**: 前端使用localStorage存储用户信息，后端使用Session进行认证。
 
-3. **管理员权限**: 管理员功能需要使用管理员账号（user_id=1）登录。
+3. **管理员权限**: 管理员功能需要使用管理员账号`user_id=ADMIN_USER_ID`登录。
 
 ## 技术栈
 
@@ -126,11 +96,3 @@ const API_BASE_URL = 'http://your-backend-url:port';
 - JavaScript (ES6+)
 - Fetch API
 
-## 依赖
-
-前端无额外依赖，只需现代浏览器支持即可。
-
-后端依赖：
-- Django 4.2+
-- django-cors-headers
-- mysqlclient

@@ -358,11 +358,6 @@ const CommentAPI = {
         body: { comment_id: commentId }
     }),
 
-    // 点赞评论
-    likeComment: (commentId) => apiRequest(`/comment/like_comment/${commentId}/`, {
-        method: 'POST'
-    }),
-
     // 评论操作(点赞/举报)
     actionComment: (commentId, action) => apiRequest('/comment/action_comment/', {
         method: 'POST',

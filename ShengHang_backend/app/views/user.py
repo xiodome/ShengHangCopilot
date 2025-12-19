@@ -920,7 +920,7 @@ def get_user_info(request):
 # ================================
 # 16. 管理员界面
 # ================================
-ADMIN_USER_ID = 1  # 你可以改成实际管理员 id
+ADMIN_USER_ID = 1  # 可以改成实际管理员 id
 @csrf_exempt
 def admin_profile(request):
     # --------------------------

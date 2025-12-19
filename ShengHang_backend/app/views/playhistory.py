@@ -6,7 +6,9 @@ from django.views.decorators.csrf import csrf_exempt
 from .tools import *
 
 
-# 记录播放
+# ==========================
+# 1. 记录播放
+# ==========================
 # 设置防刷规则：同一首歌在 60秒 内重复提交只记录一次，不增加播放计数
 # 自动更新 Song 表的 play_count
 @csrf_exempt
@@ -69,7 +71,11 @@ def record_play(request):
         else:
             return json_cn({"message": "播放记录过频，忽略本次计数"})
 
-# 统计总播放次数 (歌曲、专辑、歌手)
+
+# ==========================
+# 2. 统计总播放次数 
+# ==========================
+# 歌曲、专辑、歌手
 def get_total_play_stats(request):
     if request.method != "GET":
         return json_cn({"error": "GET required"}, 400)
@@ -124,7 +130,10 @@ def get_total_play_stats(request):
     })
 
 
-# 用户查看播放记录 (支持整体、筛选、查单曲)
+# ==========================
+# 3. 用户查看播放记录 
+# ==========================
+# 支持整体、筛选、查单曲
 def get_my_play_history(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)
@@ -177,8 +186,10 @@ def get_my_play_history(request):
     return json_cn({"history": history, "count": len(history)})
 
 
-# 生成用户播放报告 (周/月/自定义时间段)
-# 统计该时间段内：总播放次数、总听歌时长、听得最多的歌
+# ==========================
+# 4. 生成用户播放报告 
+# ==========================
+# 统计该时间段(周/月/自定义)内：总播放次数、总听歌时长、听得最多的歌
 def get_play_report(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)
@@ -246,7 +257,10 @@ def get_play_report(request):
     })
 
 
-# 用户最常听排行榜 (歌手/专辑/歌曲)
+# ==========================
+# 5. 用户最常听排行榜 
+# ==========================
+# 歌手/专辑/歌曲
 # 展示“我”最爱听的
 def get_user_top_charts(request):
     if request.method != "POST":
@@ -311,7 +325,9 @@ def get_user_top_charts(request):
     })
 
 
-# 用户时间段内播放情况统计 (趋势图数据)
+# ==========================
+# 6. 用户时间段内播放情况统计 (趋势图数据) 
+# ==========================
 # 用于前端画图，例如：统计最近7天，每天听了多少首
 def get_user_activity_trend(request):
     if request.method != "POST":

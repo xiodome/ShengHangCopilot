@@ -1,2 +1,3 @@
-# ShengHang
-database work
+# 声航音乐后端
+
+这是声航音乐服务系统的后端部分，使用Django实现。
