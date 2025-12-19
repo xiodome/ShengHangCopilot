@@ -474,25 +474,25 @@ const AdministratorAPI = {
     }),
 
     // 获取用户行为统计
-    getUserBehaviorStats: (filters = {}) => apiRequest('/Administrator/get_user_behavior_stats/', {
+    getUserBehaviorStats: (filters = {}) => apiRequest('/Administrator/user/get_user_behavior_stats/', {
         method: 'POST',
         body: filters
     }),
 
     // 获取特定用户的详细行为统计
-    getSpecificUserStats: (targetUserId, filters = {}) => apiRequest('/Administrator/get_specific_user_stats/', {
+    getSpecificUserStats: (targetUserId, filters = {}) => apiRequest('/Administrator/user/get_specific_user_stats/', {
         method: 'POST',
         body: { target_user_id: targetUserId, ...filters }
     }),
 
     // 获取待审核评论列表
-    getPendingComments: (page = 1, pageSize = 20) => apiRequest('/Administrator/admin_get_pending_comments/', {
+    getPendingComments: (page = 1, pageSize = 20) => apiRequest('/Administrator/comment/admin_get_pending_comments/', {
         method: 'POST',
         body: { page, page_size: pageSize }
     }),
 
     // 管理员审核评论
-    auditComment: (commentId, result, banUser = false) => apiRequest('/Administrator/admin_audit_comment/', {
+    auditComment: (commentId, result, banUser = false) => apiRequest('/Administrator/comment/admin_audit_comment/', {
         method: 'POST',
         body: { comment_id: commentId, result, ban_user: banUser }
     })

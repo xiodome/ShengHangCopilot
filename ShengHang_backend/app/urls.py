@@ -33,7 +33,7 @@ urlpatterns = [
     path("user/<int:uid>/get_followsingers/", user.get_followsingers),
     path("user/get_user_info/", user.get_user_info),
     path("Administrator/profile/", user.admin_profile),
-    path("user/update_visibility", user.update_visibility),
+    path("user/update_visibility/", user.update_visibility),
 
     # 歌手与音乐管理模块
     path("music/", music.music),
@@ -94,6 +94,6 @@ urlpatterns = [
     path("Administrator/get_system_logs/", manager.get_system_logs),
     path("Administrator/user/get_specific_user_stats/", manager.get_specific_user_stats),
     path("Administrator/user/get_user_behavior_stats/", manager.get_user_behavior_stats),
-    path("Administrator/comment/get_user_behavior_stats/", manager.admin_get_pending_comments),
+    path("Administrator/comment/admin_get_pending_comments/", manager.admin_get_pending_comments),
     path("Administrator/comment/admin_audit_comment/", manager.admin_audit_comment),
 ]

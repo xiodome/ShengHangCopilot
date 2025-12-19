@@ -909,6 +909,7 @@
         function escapeAttr(str) {
             if (!str) return '';
             return String(str)
+                .replace(/\n/g, '\\n')
                 .replace(/\\/g, '\\\\')
                 .replace(/'/g, "\\'")
                 .replace(/"/g, '\\"');
@@ -1107,7 +1108,7 @@
             };
             const duration = document.getElementById('editSongDuration').value.trim();
             const fileUrl = document.getElementById('editSongFileUrl').value.trim();
-            if (duration) data.duration = duration;
+            if (duration) data.duration = durationToSeconds(duration); // 转成秒
             if (fileUrl) data.file_url = fileUrl;
             
             try {
@@ -1161,6 +1162,11 @@
             const alertBox = document.getElementById('alertBox');
             alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
             setTimeout(() => alertBox.innerHTML = '', 3000);
+        }
+
+        function durationToSeconds(duration) {
+            const [m, s] = duration.split(':').map(Number);
+            return m * 60 + s;
         }
     </script>
 </body>
