@@ -357,10 +357,10 @@ const CommentAPI = {
         }),
 
     // 举报评论
-    getCommentStats: (commentId) => 
-        apiRequest(`/comment/report_comment/?comment_id=${commentId}`, {
-            method: 'POST'
-        })
+    reportComment: (commentId, reason = '用户举报') => apiRequest('/comment/report_comment/', {
+        method: 'POST',
+        body: { comment_id: commentId, reason }
+    })
     
 };
 
@@ -426,8 +426,9 @@ const AdministratorAPI = {
     }),
 
     // 修改歌手信息
-    adminUpdateSinger: () => apiRequest('/Administrator/singer/admin_update_singer/', {
-        
+    adminUpdateSinger: (singerData) => apiRequest('/Administrator/singer/admin_update_singer/', {
+        method: 'POST',
+        body: singerData
     }),
 
     // 添加专辑
@@ -443,8 +444,9 @@ const AdministratorAPI = {
     }),
 
     // 修改专辑信息
-    adminUpdateAlbum: () => apiRequest('/Administrator/album/admin_update_album/', {
-        
+    adminUpdateAlbum: (albumData) => apiRequest('/Administrator/album/admin_update_album/', {
+        method: 'POST',
+        body: albumData
     }),
 
     // 添加歌曲
@@ -460,24 +462,83 @@ const AdministratorAPI = {
     }),
 
     // 修改歌曲信息
-    adminUpdateSong: () => apiRequest('/Administrator/song/admin_update_song/', {
-        
+    adminUpdateSong: (songData) => apiRequest('/Administrator/song/admin_update_song/', {
+        method: 'POST',
+        body: songData
     }),
 
     // 查看系统日志
-
+    getSystemLogs: (filters) => apiRequest('/Administrator/get_system_logs/', {
+        method: 'POST',
+        body: filters
+    }),
 
     // 获取用户行为统计
-
+    getUserBehaviorStats: (dateRange) => apiRequest('/Administrator/user/get_user_behavior_stats/', {
+        method: 'POST',
+        body: dateRange
+    }),
 
     // 获取特定用户的详细行为统计
+    getSpecificUserStats: (userId, dateRange) => apiRequest('/Administrator/user/get_specific_user_stats/', {
+        method: 'POST',
+        body: { target_user_id: userId, ...dateRange }
+    }),
 
-
-    // 获取待审核评论列表
-
+    /**
+     * 获取待审核评论列表
+     * 
+     * IMPORTANT: 后端URL存在命名错误
+     * - URL路径是: /Administrator/comment/get_user_behavior_stats/
+     * - 但实际功能是: 获取待审核评论列表 (admin_get_pending_comments)
+     * - 这是后端的bug，但前端必须使用实际定义的URL才能正常工作
+     * 
+     * @param {number} page - 页码
+     * @param {number} pageSize - 每页数量
+     * @returns {Promise} 返回待审核评论列表
+     */
+    getPendingComments: (page = 1, pageSize = 20) => apiRequest('/Administrator/comment/get_user_behavior_stats/', {
+        method: 'POST',
+        body: { page, page_size: pageSize }
+    }),
 
     // 管理员审核评论
+    auditComment: (commentId, result, banUser = false) => apiRequest('/Administrator/comment/admin_audit_comment/', {
+        method: 'POST',
+        body: { comment_id: commentId, result, ban_user: banUser }
+    })
 }
+
+// ====================================
+// 文件上传API
+// 注意：目前后端还未实现专用的文件上传端点
+// file_url 和 cover_url 字段在创建/更新时直接传入路径字符串
+// 未来需要实现真正的文件上传功能
+// ====================================
+const FileUploadAPI = {
+    /**
+     * 上传图片文件 (专辑封面、歌单封面)
+     * @param {File} file - 要上传的图片文件
+     * @param {string} type - 图片类型 ('album_cover' | 'songlist_cover')
+     * @returns {Promise<string>} 上传后的URL
+     * @throws {Error} 当前未实现，调用将抛出错误
+     */
+    uploadImage: (file, type) => {
+        console.warn('FileUploadAPI.uploadImage 尚未实现，请直接使用文件路径字符串');
+        return Promise.reject(new Error('文件上传功能未实现，请直接在创建/更新时传入文件路径'));
+    },
+
+    /**
+     * 上传音频文件 (歌曲音频)
+     * @param {File} file - 要上传的音频文件
+     * @returns {Promise<string>} 上传后的URL
+     * @throws {Error} 当前未实现，调用将抛出错误
+     */
+    uploadAudio: (file) => {
+        console.warn('FileUploadAPI.uploadAudio 尚未实现，请直接使用文件路径字符串');
+        return Promise.reject(new Error('文件上传功能未实现，请直接在创建/更新时传入文件路径'));
+    }
+};
 
 // ====================================
 // 辅助函数
