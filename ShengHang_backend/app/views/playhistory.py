@@ -76,6 +76,7 @@ def record_play(request):
 # 2. 统计总播放次数 
 # ==========================
 # 歌曲、专辑、歌手
+@csrf_exempt
 def get_total_play_stats(request):
     if request.method != "GET":
         return json_cn({"error": "GET required"}, 400)
@@ -134,6 +135,7 @@ def get_total_play_stats(request):
 # 3. 用户查看播放记录 
 # ==========================
 # 支持整体、筛选、查单曲
+@csrf_exempt
 def get_my_play_history(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)
@@ -190,6 +192,7 @@ def get_my_play_history(request):
 # 4. 生成用户播放报告 
 # ==========================
 # 统计该时间段(周/月/自定义)内：总播放次数、总听歌时长、听得最多的歌
+@csrf_exempt
 def get_play_report(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)
@@ -262,6 +265,7 @@ def get_play_report(request):
 # ==========================
 # 歌手/专辑/歌曲
 # 展示“我”最爱听的
+@csrf_exempt
 def get_user_top_charts(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)
@@ -329,6 +333,7 @@ def get_user_top_charts(request):
 # 6. 用户时间段内播放情况统计 (趋势图数据) 
 # ==========================
 # 用于前端画图，例如：统计最近7天，每天听了多少首
+@csrf_exempt
 def get_user_activity_trend(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)

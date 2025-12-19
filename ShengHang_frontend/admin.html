@@ -234,7 +234,7 @@
             if (introduction) data.introduction = introduction;
             
             try {
-                const result = await MusicAPI.adminAddSinger(data);
+                const result = await AdministratorAPI.adminAddSinger(data);
                 showAlert(result.message || '歌手添加成功！', 'success');
                 document.getElementById('addSingerForm').reset();
             } catch (error) {
@@ -253,7 +253,7 @@
             }
             
             try {
-                const result = await MusicAPI.adminDeleteSinger(singerId, singerName);
+                const result = await AdministratorAPI.adminDeleteSinger(singerId, singerName);
                 showAlert(result.message || '歌手删除成功！', 'success');
                 document.getElementById('deleteSingerForm').reset();
             } catch (error) {
@@ -279,7 +279,7 @@
             if (description) data.description = description;
             
             try {
-                const result = await MusicAPI.adminAddAlbum(data);
+                const result = await AdministratorAPI.adminAddAlbum(data);
                 showAlert(result.message || '专辑添加成功！', 'success');
                 document.getElementById('addAlbumForm').reset();
             } catch (error) {
@@ -297,7 +297,7 @@
             }
             
             try {
-                const result = await MusicAPI.adminDeleteAlbum(albumId);
+                const result = await AdministratorAPI.adminDeleteAlbum(albumId);
                 showAlert(result.message || '专辑删除成功！', 'success');
                 document.getElementById('deleteAlbumForm').reset();
             } catch (error) {
@@ -326,7 +326,7 @@
             };
             
             try {
-                const result = await MusicAPI.adminAddSong(data);
+                const result = await AdministratorAPI.adminAddSong(data);
                 showAlert(result.message || '歌曲添加成功！', 'success');
                 document.getElementById('addSongForm').reset();
             } catch (error) {
@@ -344,7 +344,7 @@
             }
             
             try {
-                const result = await MusicAPI.adminDeleteSong(songId);
+                const result = await AdministratorAPI.adminDeleteSong(songId);
                 showAlert(result.message || '歌曲删除成功！', 'success');
                 document.getElementById('deleteSongForm').reset();
             } catch (error) {

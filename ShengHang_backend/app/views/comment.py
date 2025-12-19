@@ -31,7 +31,7 @@ def publish_comment(request):
         return json_cn({"error": "无效的评论目标类型"}, 400)
 
     # 简单的敏感词过滤逻辑可以在这里加...
-    status = '正常'
+    status = '审核中'
 
     sql = """
           INSERT INTO Comment (user_id, target_type, target_id, content, parent_id, status, like_count, comment_time)
@@ -41,7 +41,7 @@ def publish_comment(request):
     with connection.cursor() as cursor:
         cursor.execute(sql, [current_user_id, target_type, target_id, content, parent_id, status])
 
-    return json_cn({"message": "评论发布成功"})
+    return json_cn({"message": "评论发布成功，正在进行安全审核"})
 
 
 # ================================
@@ -469,3 +469,34 @@ def list_comment(request):
             "comments": songlist_comments
         }
     })
+
+# ==========================
+# 9. 举报评论
+# ==========================
+@csrf_exempt
+def report_comment(request):
+
+    if "user_id" not in request.session:
+        return json_cn({"error": "请先登录再查看评论"}, 403)
+
+    uid = request.session["user_id"]
+
+    # 1. 获取参数
+    data = json.loads(request.body)
+    comment_id = data.get("comment_id")
+    reason = data.get("reason", "用户举报")  # 举报理由，虽然数据库没存，但可以记日志
+
+    if not comment_id:
+        return json_cn({"error": "参数缺失"}, 400)
+
+    # 2. 执行举报
+    # 逻辑：不管它之前是什么状态，只要有人举报，就改为 '举报中'，等待管理员处理
+    sql = "UPDATE Comment SET status = '举报中' WHERE comment_id = %s"
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [comment_id])
+
+    # 虽然 SystemLog 主要记管理员操作，但这里也可以借用一下
+    # add_system_log(f"用户举报评论: {reason}", "Comment", comment_id, "success")
+
+    return json_cn({"message": "举报成功，我们将尽快处理"})

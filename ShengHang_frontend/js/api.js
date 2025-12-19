@@ -159,6 +159,12 @@ const UserAPI = {
     // 管理员资料
     getAdminProfile: () => apiRequest('/Administrator/profile/', {
         method: 'GET'
+    }),
+
+    // 更新个人信息可见性
+    updateVisibility: (visibility) => apiRequest('/user/update_visibility/', {
+        method: 'POST',
+        body: visibility
     })
 };
 
@@ -202,42 +208,6 @@ const MusicAPI = {
     // 获取歌曲详情
     getSongProfile: (songId) => apiRequest(`/song/profile/${songId}/`, {
         method: 'GET'
-    }),
-
-    // 管理员添加歌手
-    adminAddSinger: (singerData) => apiRequest('/Administrator/singer/admin_add_singer/', {
-        method: 'POST',
-        body: singerData
-    }),
-
-    // 管理员删除歌手
-    adminDeleteSinger: (singerId, singerName) => apiRequest('/Administrator/singer/admin_delete_singer/', {
-        method: 'POST',
-        body: { singer_id: singerId, singer_name: singerName }
-    }),
-
-    // 管理员添加专辑
-    adminAddAlbum: (albumData) => apiRequest('/Administrator/album/admin_add_album/', {
-        method: 'POST',
-        body: albumData
-    }),
-
-    // 管理员删除专辑
-    adminDeleteAlbum: (albumId) => apiRequest('/Administrator/album/admin_delete_album/', {
-        method: 'POST',
-        body: { album_id: albumId }
-    }),
-
-    // 管理员添加歌曲
-    adminAddSong: (songData) => apiRequest('/Administrator/song/admin_add_song/', {
-        method: 'POST',
-        body: songData
-    }),
-
-    // 管理员删除歌曲
-    adminDeleteSong: (songId) => apiRequest('/Administrator/song/admin_delete_song/', {
-        method: 'POST',
-        body: { song_id: songId }
     })
 };
 
@@ -384,17 +354,25 @@ const CommentAPI = {
     getCommentStats: (targetType, targetId) => 
         apiRequest(`/comment/get_comment_stats/?target_type=${targetType}&target_id=${targetId}`, {
             method: 'GET'
+        }),
+
+    // 举报评论
+    getCommentStats: (commentId) => 
+        apiRequest(`/comment/report_comment/?comment_id=${commentId}`, {
+            method: 'POST'
         })
+    
 };
 
 // ====================================
 // 播放记录API
 // ====================================
+DEFALUT_PLAY_DURATION = 500
 const PlayHistoryAPI = {
     // 记录播放
     recordPlay: (songId, playDuration = 0) => apiRequest('/playHistory/record_play/', {
         method: 'POST',
-        body: { song_id: songId, play_duration: playDuration }
+        body: { song_id: songId, play_duration: DEFALUT_PLAY_DURATION }
     }),
 
     // 获取播放统计
@@ -432,6 +410,74 @@ const PlayHistoryAPI = {
         body: { period }
     })
 };
+
+
+const AdministratorAPI = {
+    // 添加歌手
+    adminAddSinger: (singerData) => apiRequest('/Administrator/singer/admin_add_singer/', {
+        method: 'POST',
+        body: singerData
+    }),
+
+    // 删除歌手
+    adminDeleteSinger: (singerId, singerName) => apiRequest('/Administrator/singer/admin_delete_singer/', {
+        method: 'POST',
+        body: { singer_id: singerId, singer_name: singerName }
+    }),
+
+    // 修改歌手信息
+    adminUpdateSinger: () => apiRequest('/Administrator/singer/admin_update_singer/', {
+        
+    }),
+
+    // 添加专辑
+    adminAddAlbum: (albumData) => apiRequest('/Administrator/album/admin_add_album/', {
+        method: 'POST',
+        body: albumData
+    }),
+
+    // 删除专辑
+    adminDeleteAlbum: (albumId) => apiRequest('/Administrator/album/admin_delete_album/', {
+        method: 'POST',
+        body: { album_id: albumId }
+    }),
+
+    // 修改专辑信息
+    adminUpdateAlbum: () => apiRequest('/Administrator/album/admin_update_album/', {
+        
+    }),
+
+    // 添加歌曲
+    adminAddSong: (songData) => apiRequest('/Administrator/song/admin_add_song/', {
+        method: 'POST',
+        body: songData
+    }),
+
+    // 删除歌曲
+    adminDeleteSong: (songId) => apiRequest('/Administrator/song/admin_delete_song/', {
+        method: 'POST',
+        body: { song_id: songId }
+    }),
+
+    // 修改歌曲信息
+    adminUpdateSong: () => apiRequest('/Administrator/song/admin_update_song/', {
+        
+    }),
+
+    // 查看系统日志
+
+
+    // 获取用户行为统计
+
+
+    // 获取特定用户的详细行为统计
+
+
+    // 获取待审核评论列表
+
+
+    // 管理员审核评论
+}
 
 // ====================================
 // 辅助函数

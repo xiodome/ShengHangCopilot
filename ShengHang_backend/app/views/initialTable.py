@@ -29,6 +29,13 @@ def initialize_tables():
         NOT NULL DEFAULT '正常'
         """,
 
+        # 修复 visibility
+        """
+        ALTER TABLE user
+        MODIFY visibility ENUM('私密','仅关注者可见','所有人可见')
+        NOT NULL DEFAULT '所有人可见'
+        """,
+
 
         # singer表
         # 修复type

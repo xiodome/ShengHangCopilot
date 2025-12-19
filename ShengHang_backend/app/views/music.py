@@ -72,17 +72,51 @@ def search_singer(request):
         filters.append("singer_name LIKE %s")
         params.append("%" + singer_name + "%")
 
+
     # --------------------------
-    # 3. 正式查找歌手
+    # 3. 获取排序标签
+    # --------------------------
+    orderType = data.get("order")       # name / songs / followers
+    orderDir = data.get("direction")    # asc / desc
+    orderDir = "DESC" if str(orderDir).lower() == "desc" else "ASC"
+
+    join_clause = ""
+    order_clause = "s.singer_name " + orderDir
+
+    if orderType == "songs":
+        join_clause = """
+            LEFT JOIN (
+                SELECT singer_id, COUNT(*) AS total_songs
+                FROM song_singer
+                GROUP BY singer_id
+            ) song_count ON song_count.singer_id = s.singer_id
+        """
+        order_clause = "total_songs " + orderDir
+    elif orderType == "followers":
+        join_clause = """
+            LEFT JOIN (
+                SELECT singer_id, COUNT(*) AS followers
+                FROM SingerFollow
+                GROUP BY singer_id
+            ) follow_count ON follow_count.singer_id = s.singer_id
+        """
+        order_clause = "followers " + orderDir
+  
+    # --------------------------
+    # 4. 正式查找歌手
     # --------------------------
 
     where_clause = "WHERE " + " AND ".join(filters) if filters else ""
 
     sql = f"""
-        SELECT singer_id, singer_name, type, country
-        FROM Singer
+        SELECT
+            s.singer_id, s.singer_name, s.type, s.country
+            {', COALESCE(song_count.total_songs, 0) AS total_songs' if orderType == 'songs' else ''}
+            {', COALESCE(follow_count.followers, 0) AS followers' if orderType == 'followers' else ''}
+        FROM Singer s
+        {join_clause}
         {where_clause}
-        ORDER BY singer_name ASC
+        ORDER BY {order_clause}
     """
 
     with connection.cursor() as cursor:
@@ -90,7 +124,7 @@ def search_singer(request):
         rows = cursor.fetchall()
 
     # ------------------------
-    # 4. 查询数量
+    # 5. 查询数量
     # ------------------------
     sql_count = f"""
         SELECT COUNT(*)
@@ -104,15 +138,25 @@ def search_singer(request):
 
 
     # --------------------------
-    # 5. 返回搜索结果
+    # 6. 返回搜索结果
     # --------------------------
     singers = []
-    for (singer_id, singer_name, singer_type, country) in rows:
+    for row in rows:
+        singer_id, singer_name, singer_type, country = row[:4]
+        songs_count = None
+        followers_count = None
+        if orderType == "songs":
+            songs_count = row[4]
+        elif orderType == "followers":
+            followers_count = row[4]
+
         singers.append({
             "singer_id": singer_id,
             "singer_name": singer_name,
             "type": singer_type,
-            "country": country
+            "country": country,
+            "songs_count": songs_count,
+            "followers_count": followers_count
         })
 
     return json_cn({
@@ -263,23 +307,43 @@ def search_album(request):
         filters.append("a.album_title LIKE %s")
         params.append(f"%{album_title}%")
     if singer_name:
-        filters.append("s.singer_name LIKE %s")
+        filters.append("sg.singer_name LIKE %s")
         params.append(f"%{singer_name}%")
 
+    
+    # --------------------------
+    # 3. 查询结果排序
+    # --------------------------  
+    orderType = data.get("order")       # release_date / songs_count / album_title
+    orderDir = data.get("direction")    # asc / desc
+    orderDir = "DESC" if str(orderDir).lower() == "desc" else "ASC"
+
+    order = "a.album_title " + orderDir # 默认按名字排序
+    join = ""
+
+    if orderType == "release_date":
+        order = "a.release_date " + orderDir
+    elif orderType == "songs_count":
+        join = "LEFT JOIN Song s ON s.album_id = a.album_id"
+        order = "COUNT(s.song_id) " + orderDir
 
     # --------------------------
-    # 3. 查询专辑信息
+    # 4. 查询专辑信息
     # --------------------------
-    sql_album = """
-        SELECT a.album_title, sg.singer_name, a.release_date, a.album_id
+    sql_album = f"""
+        SELECT a.album_id, a.album_title, sg.singer_name, a.release_date
+        {', COUNT(s.song_id) AS songs_count' if orderType == 'songs_count' else ''}
         FROM Album a
         JOIN Singer sg ON a.singer_id = sg.singer_id
+        {join}
     """
 
     if filters:
         sql_album += " WHERE " + " AND ".join(filters)
+    if orderType == 'songs_count':
+        sql_album += " GROUP BY a.album_id"
 
-    sql_album += " GROUP BY a.album_id"
+    sql_album += f" ORDER BY {order}"
 
     with connection.cursor() as cursor:
         cursor.execute(sql_album, params)
@@ -291,15 +355,18 @@ def search_album(request):
 
 
     # --------------------------
-    # 4. 返回搜索结果
+    # 5. 返回搜索结果
     # --------------------------
     albums = []
-    for (album_title, singer_name, release_date, album_id) in rows:
+    for row in rows:
+        album_id, album_title, singer_name, release_date = row[:4]
+        songs_count = row[4] if orderType == "songs_count" else None
         albums.append({
             "album_id": album_id,
             "album_title": album_title,
             "singer_name": singer_name,
-            "release_date": str(release_date) if release_date else None
+            "release_date": str(release_date) if release_date else None,
+            "songs_count": songs_count
         })
 
     return json_cn({
@@ -485,11 +552,24 @@ def search_song(request):
 
 
     # --------------------------
-    # 3. 查询歌曲信息
+    # 3. 查询结果排序
+    # --------------------------  
+    orderType = data.get("order")       # duration / play_count / song_title
+    orderDir = data.get("direction")    # asc / desc
+    orderDir = "DESC" if str(orderDir).lower() == "desc" else "ASC"
+    
+    allowed_order = ["duration", "play_count", "song_title"]
+    if orderType not in allowed_order:  
+        orderType = "song_title"    # 默认按名字排序
+    order = f"s.{orderType} {orderDir}"
+
+
+    # --------------------------
+    # 4. 查询歌曲信息
     # --------------------------
     # Base SQL query
     sql_song = """
-        SELECT DISTINCT s.song_id, s.song_title, s.duration, a.album_title
+        SELECT DISTINCT s.song_id, s.song_title, s.duration, s.play_count, a.album_title
         FROM Song s
         JOIN Album a ON a.album_id = s.album_id
     """
@@ -511,6 +591,7 @@ def search_song(request):
     if filters:
         sql_song += " WHERE " + " AND ".join(filters)
 
+    sql_song += f"ORDER BY {order}"
 
 
     with connection.cursor() as cursor:
@@ -521,10 +602,10 @@ def search_song(request):
             return json_cn({"message": "未找到符合歌曲", "songs": []})
             
         # --------------------------
-        # 4. 生成歌曲列表
+        # 5. 生成歌曲列表
         # --------------------------
         songs = []
-        for (song_id, song_title, duration, album_title) in rows:
+        for (song_id, song_title, duration, play_count, album_title) in rows:
             cursor.execute(sql_singers, [song_id])
             singer_rows = cursor.fetchall()
             song_singers = [{"singer_id": row[0], "singer_name": row[1]} for row in singer_rows]
@@ -534,6 +615,7 @@ def search_song(request):
                 "song_title": song_title,
                 "duration": duration,
                 "duration_formatted": format_time(duration),
+                "play_count": play_count,
                 "album_title": album_title,
                 "singers": song_singers
             })

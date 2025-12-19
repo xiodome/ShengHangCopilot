@@ -17,6 +17,7 @@
             <a href="favorites.html" class="active">我的收藏</a>
             <a href="history.html">播放记录</a>
             <a href="profile.html">个人中心</a>
+            <span id="adminLink" style="display: none;"><a href="admin.html">管理后台</a></span>
         </div>
         <div class="user-info">
             <span id="welcomeText">加载中...</span>
@@ -73,6 +74,14 @@
         
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+
+            if (UserStore.isAdmin()) {
+                const adminLink = document.getElementById('adminLink');
+                if (adminLink) {
+                    adminLink.style.display = 'inline';
+                }
+            }
+
             loadFavorites();
         });
         

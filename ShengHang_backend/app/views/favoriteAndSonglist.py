@@ -703,9 +703,9 @@ def sort_songlist(request, songlist_id):
 
 
 
-# ==========================
+# ================================
 # 9. 搜索歌单
-# ==========================
+# ================================
 @csrf_exempt
 def search_songlist(request):
     # --------------------------
@@ -728,6 +728,7 @@ def search_songlist(request):
     # 2. 获取搜索标签
     # --------------------------
     songlist_title = data.get("songlist_title", "").strip()
+    user_name = data.get("user_name", "").strip()
 
     filters = []
     params = []
@@ -735,19 +736,50 @@ def search_songlist(request):
     if songlist_title:
         filters.append("sl.songlist_title LIKE %s")
         params.append(f"%{songlist_title}%")
+    if user_name:
+        filters.append("u.user_name LIKE %s")
+        params.append(f"%{user_name}%")
 
 
     # --------------------------
-    # 3. 查询歌单信息
+    # 3. 查询结果排序
     # --------------------------
-    sql_songlist = """
-        SELECT sl.songlist_id, sl.songlist_title, sl.cover_url, u.user_id, u.user_name
+    orderType = data.get("order")       # songs_count / user_name / sonlist_title / like_count
+    orderDir = data.get("direction")    # asc / desc
+    orderDir = "DESC" if str(orderDir).lower() == "desc" else "ASC"
+    join = ""
+
+    if orderType == "songs_count":  
+        order = f"sls.songs_count {orderDir}"    # 默认按名字排序
+        join = """LEFT JOIN (
+                    SELECT songlist_id, COUNT(*) AS songs_count
+                    FROM songlist_song
+                    GROUP BY songlist_id
+                ) sls ON sls.songlist_id = sl.songlist_id
+                """
+    elif orderType == "user_name":
+        order = f"u.user_name {orderDir}"
+    elif orderType == "like_count":
+        order = f"sl.like_count {orderDir}"
+    else:
+        order = f"sl.songlist_title {orderDir}"
+
+
+    # --------------------------
+    # 4. 查询歌单信息
+    # --------------------------
+    sql_songlist = f"""
+        SELECT sl.songlist_id, sl.songlist_title, sl.cover_url, u.user_id, u.user_name, sl.like_count
+        {', COALESCE(sls.songs_count, 0) AS songs_count' if orderType == 'songs_count' else ''}
         FROM Songlist sl
         JOIN User u ON u.user_id = sl.user_id
+        {join}
     """
 
     if filters:
         sql_songlist += " WHERE " + " AND ".join(filters)
+
+    sql_songlist += f" ORDER BY {order}"
 
 
     with connection.cursor() as cursor:
@@ -758,16 +790,20 @@ def search_songlist(request):
             return json_cn({"message": "未找到符合歌单", "songlists": []})
             
         # --------------------------
-        # 4. 返回搜索结果
+        # 5. 返回搜索结果
         # --------------------------
         songlists = []
-        for (songlist_id, songlist_title, cover_url, user_id, user_name) in rows:
+        for row in rows:
+            songlist_id, songlist_title, cover_url, user_id, user_name, like_count = row[:6]
+            songs_count = row[6] if orderType == "songs_count" else None
             songlists.append({
                 "songlist_id": songlist_id,
                 "songlist_title": songlist_title,
                 "cover_url": cover_url,
                 "user_id": user_id,
-                "user_name": user_name
+                "user_name": user_name,
+                "like_count": like_count,
+                "songs_count": songs_count
             })
 
     return json_cn({
@@ -799,9 +835,9 @@ def like_songlist(request, songlist_id):
     
 
 
-# ==========================
+# ================================
 # 11. 个人收藏
-# ==========================
+# ================================
 @csrf_exempt
 def list_favorite(request):
     # --------------------------

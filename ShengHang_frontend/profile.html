@@ -17,6 +17,7 @@
             <a href="favorites.html">我的收藏</a>
             <a href="history.html">播放记录</a>
             <a href="profile.html" class="active">个人中心</a>
+            <span id="adminLink" style="display: none;"><a href="admin.html">管理后台</a></span>
         </div>
         <div class="user-info">
             <span id="welcomeText">加载中...</span>
@@ -175,6 +176,11 @@
         
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+
+            if (UserStore.isAdmin()) {
+                document.getElementById('adminLink').style.display = 'inline';
+            }
+
             loadProfile();
         });
         
@@ -227,7 +233,6 @@
                 container.innerHTML = `
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div><strong>用户名：</strong>${profile.username}</div>
-                        <div><strong>用户ID：</strong>${profile.user_id}</div>
                         <div><strong>性别：</strong>${profile.gender || '未设置'}</div>
                         <div><strong>生日：</strong>${profile.birthday || '未设置'}</div>
                         <div><strong>地区：</strong>${profile.region || '未设置'}</div>

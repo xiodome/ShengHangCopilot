@@ -17,6 +17,7 @@
             <a href="favorites.html">我的收藏</a>
             <a href="history.html">播放记录</a>
             <a href="profile.html">个人中心</a>
+            <span id="adminLink" style="display: none;"><a href="admin.html">管理后台</a></span>
         </div>
         <div class="user-info">
             <span id="welcomeText">加载中...</span>
@@ -103,6 +104,13 @@
         
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
+
+            if (UserStore.isAdmin()) {
+                const adminLink = document.getElementById('adminLink');
+                if (adminLink) {
+                    adminLink.style.display = 'inline';
+                }
+            }
             
             // 检查URL参数
             const params = new URLSearchParams(window.location.search);
@@ -445,7 +453,7 @@
         // 点赞评论
         async function likeComment(commentId) {
             try {
-                await CommentAPI.likeComment(commentId);
+                await CommentAPI.actionComment(commentId, 'like');
                 showAlert('点赞成功！', 'success');
             } catch (error) {
                 showAlert(error.error || '点赞失败', 'error');

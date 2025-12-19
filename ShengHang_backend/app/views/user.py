@@ -948,3 +948,41 @@ def admin_profile(request):
             "admin_delete_song"
         ]
     })
+
+
+
+# ================================
+# 17. 修改个人信息可见性
+# ================================
+@csrf_exempt
+def update_visibility(request):
+    # --------------------------
+    # 1. 登录校验
+    # --------------------------
+    if "user_id" not in request.session:
+        return json_cn({"error": "请先登录再修改可见性"}, 403)
+    uid = request.session["user_id"]
+
+    if request.method != "POST":
+        return json_cn({"error": "POST required"}, 400)
+
+    try:
+        data = json.loads(request.body)
+    except:
+        data = request.POST
+
+    # --------------------------
+    # 2. 获取新可见性并校验
+    # --------------------------
+    visibility = data.get("visibility")
+    if visibility not in ["私密", "仅关注者可见", "全部人可见"]:
+        return json_cn({"error": "可见性参数非法，只能为：私密/仅关注者可见/全部人可见"}, 400)
+
+    # --------------------------
+    # 3. 更新数据库
+    # --------------------------
+    sql_update = "UPDATE User SET visibility=%s WHERE user_id=%s"
+    with connection.cursor() as cursor:
+        cursor.execute(sql_update, [visibility, uid])
+
+    return json_cn({"message": "个人信息可见性修改成功", "visibility": visibility})

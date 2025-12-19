@@ -33,6 +33,7 @@ urlpatterns = [
     path("user/<int:uid>/get_followsingers/", user.get_followsingers),
     path("user/get_user_info/", user.get_user_info),
     path("Administrator/profile/", user.admin_profile),
+    path("user/update_visibility", user.update_visibility),
 
     # 歌手与音乐管理模块
     path("music/", music.music),
@@ -69,6 +70,7 @@ urlpatterns = [
     path("comment/get_comment_detail/", comment.get_comment_detail),
     path("comment/get_my_comments/", comment.get_my_comments),
     path("comment/get_comment_stats/", comment.get_comment_stats),
+    path("comment/report_comment/", comment.report_comment),
 
     # 播放记录模块
     path("playHistory/record_play/", ph.record_play),
@@ -82,8 +84,16 @@ urlpatterns = [
     # 管理员管理模块
     path("Administrator/singer/admin_add_singer/", manager.admin_add_singer),
     path("Administrator/singer/admin_delete_singer/", manager.admin_delete_singer),
+    path("Administrator/singer/admin_update_singer/", manager.admin_update_singer),
     path("Administrator/album/admin_add_album/", manager.admin_add_album),
-    path("Administrator/album/admin_add_album/", manager.admin_delete_album),
+    path("Administrator/album/admin_delete_album/", manager.admin_delete_album),
+    path("Administrator/album/admin_update_album/", manager.admin_update_album),
     path("Administrator/song/admin_add_song/", manager.admin_add_song),
     path("Administrator/song/admin_delete_song/", manager.admin_delete_song),
+    path("Administrator/song/admin_update_song/", manager.admin_update_song),
+    path("Administrator/get_system_logs/", manager.get_system_logs),
+    path("Administrator/user/get_specific_user_stats/", manager.get_specific_user_stats),
+    path("Administrator/user/get_user_behavior_stats/", manager.get_user_behavior_stats),
+    path("Administrator/comment/get_user_behavior_stats/", manager.admin_get_pending_comments),
+    path("Administrator/comment/admin_audit_comment/", manager.admin_audit_comment),
 ]

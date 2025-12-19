@@ -13,16 +13,23 @@ class User(models.Model):
         ('封禁中', '封禁中'),
     ]
 
-    user_id         = models.AutoField(primary_key=True,                                        verbose_name='用户编号')
-    user_name       = models.CharField(max_length=60, unique=True,                                verbose_name='用户名')
-    password        = models.CharField(max_length=64,                                       verbose_name='加密存储密码')
-    gender          = models.CharField(max_length=2, choices=GENDER_CHOICES, default='其他',        verbose_name='性别')
-    birthday        = models.DateField(null=True, blank=True,                                   verbose_name='出生日期')
-    region          = models.CharField(max_length=50, null=True, blank=True,                    verbose_name='所在地区')
-    email           = models.CharField(max_length=50, unique=True, null=True, blank=True,       verbose_name='用户邮箱')
-    register_time   = models.DateTimeField(auto_now_add=True,                                   verbose_name='注册时间')
-    profile         = models.CharField(max_length=768, null=True, blank=True,                   verbose_name='个人简介')
-    status          = models.CharField(max_length=3, choices=STATUS_CHOICES, default='正常',    verbose_name='账号状态')
+    VISIBILITY_CHOICES = [
+        ('私密', '私密'),
+        ('仅关注者可见', '仅关注者可见'),
+        ('所有人可见', '所有人可见'),
+    ]
+
+    user_id         = models.AutoField(primary_key=True,                                               verbose_name='用户编号')
+    user_name       = models.CharField(max_length=60, unique=True,                                     verbose_name='用户名')
+    password        = models.CharField(max_length=64,                                                  verbose_name='加密存储密码')
+    gender          = models.CharField(max_length=2, choices=GENDER_CHOICES, default='其他',           verbose_name='性别')
+    birthday        = models.DateField(null=True, blank=True,                                          verbose_name='出生日期')
+    region          = models.CharField(max_length=50, null=True, blank=True,                           verbose_name='所在地区')
+    email           = models.CharField(max_length=50, unique=True, null=True, blank=True,              verbose_name='用户邮箱')
+    register_time   = models.DateTimeField(auto_now_add=True,                                          verbose_name='注册时间')
+    profile         = models.CharField(max_length=768, null=True, blank=True,                          verbose_name='个人简介')
+    status          = models.CharField(max_length=3, choices=STATUS_CHOICES, default='正常',           verbose_name='账号状态')
+    visibility      = models.CharField(max_length=8, choices=VISIBILITY_CHOICES, default='所有人可见', verbose_name='信息可见性')
 
     class Meta:
         db_table = 'User'
