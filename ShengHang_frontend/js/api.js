@@ -485,8 +485,18 @@ const AdministratorAPI = {
         body: { target_user_id: userId, ...dateRange }
     }),
 
-    // 获取待审核评论列表
-    // 注意：后端URL路径命名有误，实际功能是获取待审核评论，而非用户行为统计
+    /**
+     * 获取待审核评论列表
+     * 
+     * IMPORTANT: 后端URL存在命名错误
+     * - URL路径是: /Administrator/comment/get_user_behavior_stats/
+     * - 但实际功能是: 获取待审核评论列表 (admin_get_pending_comments)
+     * - 这是后端的bug，但前端必须使用实际定义的URL才能正常工作
+     * 
+     * @param {number} page - 页码
+     * @param {number} pageSize - 每页数量
+     * @returns {Promise} 返回待审核评论列表
+     */
     getPendingComments: (page = 1, pageSize = 20) => apiRequest('/Administrator/comment/get_user_behavior_stats/', {
         method: 'POST',
         body: { page, page_size: pageSize }
