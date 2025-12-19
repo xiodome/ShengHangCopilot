@@ -309,15 +309,22 @@
                     ${songlist.comments && songlist.comments.length > 0 ? songlist.comments.map(comment => `
                         <div class="comment-item">
                             <div class="comment-header">
-                                <span class="username">${comment.user_name}</span>
+                                <span class="username" style="cursor: pointer;" onclick="viewUserProfile(${comment.user_id})">${comment.user_name}</span>
                                 <span class="time">${comment.comment_time}</span>
                             </div>
                             <div class="content">${comment.content}</div>
                             <div class="actions">
                                 <button onclick="likeComment(${comment.comment_id})">👍 ${comment.like_count}</button>
+                                <button onclick="showReplyForm(${comment.comment_id}, ${songlist.songlist_id})">💬 回复</button>
+                                <button onclick="reportComment(${comment.comment_id})">🚨 举报</button>
                                 ${comment.user_id == UserStore.getUserId() || songlist.is_owner ? `
                                 <button onclick="deleteComment(${comment.comment_id}, ${songlist.songlist_id})">🗑️ 删除</button>
                                 ` : ''}
+                            </div>
+                            <div id="replyForm_${comment.comment_id}" style="display: none; margin-top: 10px; padding-left: 20px;">
+                                <textarea id="replyContent_${comment.comment_id}" placeholder="回复评论..." style="width: 100%; height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+                                <button class="btn btn-small btn-primary" onclick="submitReply(${comment.comment_id}, ${songlist.songlist_id})" style="margin-top: 5px;">发送回复</button>
+                                <button class="btn btn-small btn-secondary" onclick="hideReplyForm(${comment.comment_id})" style="margin-top: 5px;">取消</button>
                             </div>
                         </div>
                     `).join('') : '<p style="color: #888; text-align: center;">暂无评论</p>'}
@@ -473,6 +480,59 @@
             } catch (error) {
                 showAlert(error.error || '删除失败', 'error');
             }
+        }
+        
+        // 显示回复表单
+        function showReplyForm(commentId, songlistId) {
+            const form = document.getElementById(`replyForm_${commentId}`);
+            if (form) {
+                form.style.display = 'block';
+            }
+        }
+        
+        // 隐藏回复表单
+        function hideReplyForm(commentId) {
+            const form = document.getElementById(`replyForm_${commentId}`);
+            if (form) {
+                form.style.display = 'none';
+            }
+        }
+        
+        // 提交回复
+        async function submitReply(parentId, songlistId) {
+            const content = document.getElementById(`replyContent_${parentId}`).value.trim();
+            if (!content) {
+                showAlert('请输入回复内容', 'error');
+                return;
+            }
+            
+            try {
+                await CommentAPI.publishComment('songlist', songlistId, content, parentId);
+                showAlert('回复发表成功！', 'success');
+                hideReplyForm(parentId);
+                viewSonglistDetail(songlistId);
+            } catch (error) {
+                showAlert(error.error || '回复发表失败', 'error');
+            }
+        }
+        
+        // 举报评论
+        async function reportComment(commentId) {
+            if (!confirm('确定要举报这条评论吗？')) {
+                return;
+            }
+            
+            try {
+                await CommentAPI.reportComment(commentId);
+                showAlert('举报成功，我们将尽快处理', 'success');
+            } catch (error) {
+                showAlert(error.error || '举报失败', 'error');
+            }
+        }
+        
+        // 查看用户资料
+        function viewUserProfile(userId) {
+            window.location.href = `profile.html?user_id=${userId}`;
         }
         
         // 辅助函数

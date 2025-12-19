@@ -35,6 +35,7 @@
             <button class="tab" onclick="switchTab('password')">🔐 修改密码</button>
             <button class="tab" onclick="switchTab('follow')">👥 关注管理</button>
             <button class="tab" onclick="switchTab('comments')">💬 我的评论</button>
+            <button class="tab" onclick="switchTab('searchUser')">🔍 搜索用户</button>
         </div>
         
         <!-- 个人资料面板 -->
@@ -75,6 +76,21 @@
                         <textarea id="editProfile" placeholder="介绍一下自己吧..." style="height: 100px;"></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">保存修改</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">🔒 隐私设置</h3>
+                <form id="visibilityForm">
+                    <div class="form-group">
+                        <label>个人信息可见性</label>
+                        <select id="visibilitySetting">
+                            <option value="全部人可见">全部人可见</option>
+                            <option value="仅关注者可见">仅关注者可见</option>
+                            <option value="私密">私密</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存隐私设置</button>
                 </form>
             </div>
             
@@ -144,6 +160,25 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 搜索用户面板 -->
+        <div id="searchUserPanel" style="display: none;">
+            <div class="card">
+                <h3 class="card-title">🔍 搜索用户</h3>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="searchUsername" placeholder="输入用户名进行搜索">
+                </div>
+                <button class="btn btn-primary" onclick="searchUser()">搜索</button>
+                <div id="searchResults" style="margin-top: 20px;"></div>
+            </div>
+            
+            <!-- 用户详情 -->
+            <div class="card" id="userDetailCard" style="display: none;">
+                <button class="btn btn-secondary" onclick="closeUserDetail()" style="margin-bottom: 15px;">← 返回搜索</button>
+                <div id="userDetailContent"></div>
+            </div>
+        </div>
     </div>
     
     <!-- 注销账号模态框 -->
@@ -173,6 +208,7 @@
         }
         
         let currentTab = 'profile';
+        let viewingUserId = null;
         
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('welcomeText').textContent = '欢迎，' + UserStore.getUsername();
@@ -181,7 +217,17 @@
                 document.getElementById('adminLink').style.display = 'inline';
             }
 
-            loadProfile();
+            // 检查URL参数，是否要查看其他用户
+            const params = new URLSearchParams(window.location.search);
+            const userId = params.get('user_id');
+            
+            if (userId && userId != UserStore.getUserId()) {
+                viewingUserId = userId;
+                switchTab('searchUser');
+                viewUserDetail(userId);
+            } else {
+                loadProfile();
+            }
         });
         
         // 切换标签页
@@ -194,7 +240,8 @@
                 if ((tab === 'profile' && index === 0) ||
                     (tab === 'password' && index === 1) ||
                     (tab === 'follow' && index === 2) ||
-                    (tab === 'comments' && index === 3)) {
+                    (tab === 'comments' && index === 3) ||
+                    (tab === 'searchUser' && index === 4)) {
                     t.classList.add('active');
                 }
             });
@@ -204,6 +251,7 @@
             document.getElementById('passwordPanel').style.display = 'none';
             document.getElementById('followPanel').style.display = 'none';
             document.getElementById('commentsPanel').style.display = 'none';
+            document.getElementById('searchUserPanel').style.display = 'none';
             
             // 显示对应面板
             document.getElementById(tab + 'Panel').style.display = 'block';
@@ -470,7 +518,7 @@
                     container.innerHTML = `
                         <p style="color: #888; margin-bottom: 15px;">共 ${allComments.length} 条评论</p>
                         ${allComments.map(comment => `
-                            <div class="comment-item">
+                            <div class="comment-item" style="cursor: pointer;" onclick="goToCommentTarget('${comment.type}', ${comment.typeId})">
                                 <div class="comment-header">
                                     <span style="background: #667eea; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">${comment.type}</span>
                                     <span class="time">${comment.comment_time}</span>
@@ -478,7 +526,7 @@
                                 <div class="content">${comment.content}</div>
                                 <div class="actions">
                                     <span>👍 ${comment.like_count}</span>
-                                    <button onclick="deleteComment(${comment.comment_id})">🗑️ 删除</button>
+                                    <button onclick="event.stopPropagation(); deleteComment(${comment.comment_id})">🗑️ 删除</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -501,6 +549,17 @@
                 loadComments();
             } catch (error) {
                 showAlert(error.error || '删除失败', 'error');
+            }
+        }
+        
+        // 点击评论跳转到对应详情页
+        function goToCommentTarget(type, targetId) {
+            if (type === '歌曲') {
+                window.location.href = `music.html?type=song&id=${targetId}`;
+            } else if (type === '专辑') {
+                window.location.href = `music.html?type=album&id=${targetId}`;
+            } else if (type === '歌单') {
+                window.location.href = `songlist.html?id=${targetId}`;
             }
         }
         
@@ -530,6 +589,90 @@
                 showAlert(error.error || '注销失败', 'error');
             }
         });
+        
+        // 隐私设置表单提交
+        document.getElementById('visibilityForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const visibility = document.getElementById('visibilitySetting').value;
+            
+            try {
+                await UserAPI.updateVisibility({ visibility: visibility });
+                showAlert('隐私设置已保存！', 'success');
+            } catch (error) {
+                showAlert(error.error || '保存失败', 'error');
+            }
+        });
+        
+        // 搜索用户
+        async function searchUser() {
+            const username = document.getElementById('searchUsername').value.trim();
+            if (!username) {
+                showAlert('请输入用户名', 'error');
+                return;
+            }
+            
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>搜索中...</p></div>';
+            
+            try {
+                const result = await UserAPI.getUserInfo(username);
+                if (result.user_id) {
+                    container.innerHTML = `
+                        <div class="song-item" style="padding: 15px; cursor: pointer;" onclick="viewUserDetail(${result.user_id})">
+                            <div class="song-info">
+                                <div class="song-title">${result.user_name}</div>
+                                <div class="song-meta">用户ID: ${result.user_id}</div>
+                            </div>
+                            <button class="btn btn-small btn-primary" onclick="event.stopPropagation(); followUser(${result.user_id})">关注</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<p style="color: #888; text-align: center;">未找到用户</p>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '搜索失败'}</div>`;
+            }
+        }
+        
+        // 查看用户详情
+        async function viewUserDetail(userId) {
+            const container = document.getElementById('userDetailContent');
+            document.getElementById('userDetailCard').style.display = 'block';
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+            
+            try {
+                const profile = await UserAPI.getProfile(userId);
+                
+                const isOwner = profile.is_owner;
+                
+                container.innerHTML = `
+                    <h2 style="margin-bottom: 20px;">👤 ${profile.username}</h2>
+                    <div style="margin-bottom: 20px;">
+                        <p><strong>用户ID:</strong> ${profile.user_id}</p>
+                        ${profile.gender ? `<p><strong>性别:</strong> ${profile.gender}</p>` : ''}
+                        ${profile.birthday ? `<p><strong>生日:</strong> ${profile.birthday}</p>` : ''}
+                        ${profile.region ? `<p><strong>地区:</strong> ${profile.region}</p>` : ''}
+                        ${profile.email ? `<p><strong>邮箱:</strong> ${profile.email}</p>` : ''}
+                        ${profile.profile ? `<p><strong>简介:</strong> ${profile.profile}</p>` : '<p style="color: #888;">这个人很懒，什么都没留下...</p>'}
+                    </div>
+                    ${!isOwner ? `
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn btn-primary" onclick="followUser(${profile.user_id})">➕ 关注</button>
+                        <button class="btn btn-secondary" onclick="unfollowUser(${profile.user_id})">➖ 取消关注</button>
+                    </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">${error.error || '无法查看此用户信息'}</div>`;
+            }
+        }
+        
+        // 关闭用户详情
+        function closeUserDetail() {
+            document.getElementById('userDetailCard').style.display = 'none';
+            viewingUserId = null;
+        }
         
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');

@@ -357,11 +357,11 @@ const CommentAPI = {
         }),
 
     // 举报评论
-    getCommentStats: (commentId) => 
-        apiRequest(`/comment/report_comment/?comment_id=${commentId}`, {
-            method: 'POST'
+    reportComment: (commentId, reason = '') => 
+        apiRequest('/comment/report_comment/', {
+            method: 'POST',
+            body: { comment_id: commentId, reason }
         })
-    
 };
 
 // ====================================
@@ -426,8 +426,9 @@ const AdministratorAPI = {
     }),
 
     // 修改歌手信息
-    adminUpdateSinger: () => apiRequest('/Administrator/singer/admin_update_singer/', {
-        
+    adminUpdateSinger: (singerData) => apiRequest('/Administrator/singer/admin_update_singer/', {
+        method: 'POST',
+        body: singerData
     }),
 
     // 添加专辑
@@ -443,8 +444,9 @@ const AdministratorAPI = {
     }),
 
     // 修改专辑信息
-    adminUpdateAlbum: () => apiRequest('/Administrator/album/admin_update_album/', {
-        
+    adminUpdateAlbum: (albumData) => apiRequest('/Administrator/album/admin_update_album/', {
+        method: 'POST',
+        body: albumData
     }),
 
     // 添加歌曲
@@ -460,24 +462,41 @@ const AdministratorAPI = {
     }),
 
     // 修改歌曲信息
-    adminUpdateSong: () => apiRequest('/Administrator/song/admin_update_song/', {
-        
+    adminUpdateSong: (songData) => apiRequest('/Administrator/song/admin_update_song/', {
+        method: 'POST',
+        body: songData
     }),
 
     // 查看系统日志
-
+    getSystemLogs: (filters = {}) => apiRequest('/Administrator/get_system_logs/', {
+        method: 'POST',
+        body: filters
+    }),
 
     // 获取用户行为统计
-
+    getUserBehaviorStats: (filters = {}) => apiRequest('/Administrator/get_user_behavior_stats/', {
+        method: 'POST',
+        body: filters
+    }),
 
     // 获取特定用户的详细行为统计
-
+    getSpecificUserStats: (targetUserId, filters = {}) => apiRequest('/Administrator/get_specific_user_stats/', {
+        method: 'POST',
+        body: { target_user_id: targetUserId, ...filters }
+    }),
 
     // 获取待审核评论列表
-
+    getPendingComments: (page = 1, pageSize = 20) => apiRequest('/Administrator/admin_get_pending_comments/', {
+        method: 'POST',
+        body: { page, page_size: pageSize }
+    }),
 
     // 管理员审核评论
-}
+    auditComment: (commentId, result, banUser = false) => apiRequest('/Administrator/admin_audit_comment/', {
+        method: 'POST',
+        body: { comment_id: commentId, result, ban_user: banUser }
+    })
+};
 
 // ====================================
 // 辅助函数
