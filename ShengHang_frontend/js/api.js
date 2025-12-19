@@ -486,6 +486,7 @@ const AdministratorAPI = {
     }),
 
     // 获取待审核评论列表
+    // 注意：后端URL路径命名有误，实际功能是获取待审核评论，而非用户行为统计
     getPendingComments: (page = 1, pageSize = 20) => apiRequest('/Administrator/comment/get_user_behavior_stats/', {
         method: 'POST',
         body: { page, page_size: pageSize }
@@ -505,19 +506,27 @@ const AdministratorAPI = {
 // 未来需要实现真正的文件上传功能
 // ====================================
 const FileUploadAPI = {
-    // TODO: 实现图片上传 (专辑封面、歌单封面)
+    /**
+     * 上传图片文件 (专辑封面、歌单封面)
+     * @param {File} file - 要上传的图片文件
+     * @param {string} type - 图片类型 ('album_cover' | 'songlist_cover')
+     * @returns {Promise<string>} 上传后的URL
+     * @throws {Error} 当前未实现，调用将抛出错误
+     */
     uploadImage: (file, type) => {
-        // type: 'album_cover' | 'songlist_cover'
-        // 返回上传后的 URL
-        console.warn('FileUploadAPI.uploadImage not implemented yet');
-        return Promise.reject(new Error('Not implemented'));
+        console.warn('FileUploadAPI.uploadImage 尚未实现，请直接使用文件路径字符串');
+        return Promise.reject(new Error('文件上传功能未实现，请直接在创建/更新时传入文件路径'));
     },
 
-    // TODO: 实现音频文件上传 (歌曲音频)
+    /**
+     * 上传音频文件 (歌曲音频)
+     * @param {File} file - 要上传的音频文件
+     * @returns {Promise<string>} 上传后的URL
+     * @throws {Error} 当前未实现，调用将抛出错误
+     */
     uploadAudio: (file) => {
-        // 返回上传后的 URL
-        console.warn('FileUploadAPI.uploadAudio not implemented yet');
-        return Promise.reject(new Error('Not implemented'));
+        console.warn('FileUploadAPI.uploadAudio 尚未实现，请直接使用文件路径字符串');
+        return Promise.reject(new Error('文件上传功能未实现，请直接在创建/更新时传入文件路径'));
     }
 };
 
