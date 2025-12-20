@@ -479,10 +479,22 @@
         // 加载评论
         async function loadComments() {
             const container = document.getElementById('commentsList');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+            const cacheKey = 'myComments';
             
             try {
-                const result = await CommentAPI.listComments();
+                // 使用带缓存的请求
+                const result = await DataCache.cachedRequest(
+                    cacheKey,
+                    () => CommentAPI.listComments(),
+                    'commentsList',
+                    '加载评论中...',
+                    '加载评论失败',
+                    true,
+                    'loadComments()'
+                );
+                
+                // 缓存结果
+                DataCache.set(cacheKey, result);
                 
                 const allComments = [];
                 
@@ -533,7 +545,8 @@
                     `;
                 }
             } catch (error) {
-                container.innerHTML = `<div class="alert alert-error">${error.error || '加载失败'}</div>`;
+                // 错误已在safeApiRequest中处理
+                console.error('加载我的评论失败:', error);
             }
         }
         
@@ -544,7 +557,17 @@
             }
             
             try {
-                await CommentAPI.deleteComment(commentId);
+                // 使用带错误处理的API请求
+                await safeApiRequest(
+                    () => CommentAPI.deleteComment(commentId),
+                    null, // 不显示加载状态，因为只是删除操作
+                    null,
+                    '删除评论失败'
+                );
+                
+                // 清除缓存，强制刷新数据
+                DataCache.set('myComments', null);
+                
                 showAlert('评论删除成功！', 'success');
                 loadComments();
             } catch (error) {
@@ -642,11 +665,35 @@
             container.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
             
             try {
-                const profile = await UserAPI.getProfile(userId);
+                // 使用带缓存的请求获取用户基本信息
+                const profile = await DataCache.cachedRequest(
+                    `userProfile_${userId}`,
+                    () => UserAPI.getProfile(userId),
+                    'userDetailContent',
+                    '加载用户信息中...',
+                    '加载用户信息失败'
+                );
+                
+                // 缓存用户基本信息
+                DataCache.set(`userProfile_${userId}`, profile);
                 
                 const isOwner = profile.is_owner;
+                const isAdmin = UserStore.isAdmin();
                 
-                container.innerHTML = `
+                // 检查用户可见性设置
+                if (profile.visibility === '私密' && !isOwner && !isAdmin) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                            <h2 style="margin-bottom: 15px;">该用户设置了隐私保护</h2>
+                            <p style="color: #666;">此用户的信息仅对本人和管理员可见</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 基本信息HTML
+                let html = `
                     <h2 style="margin-bottom: 20px;">👤 ${profile.username}</h2>
                     <div style="margin-bottom: 20px;">
                         <p><strong>用户ID:</strong> ${profile.user_id}</p>
@@ -656,13 +703,82 @@
                         ${profile.email ? `<p><strong>邮箱:</strong> ${profile.email}</p>` : ''}
                         ${profile.profile ? `<p><strong>简介:</strong> ${profile.profile}</p>` : '<p style="color: #888;">这个人很懒，什么都没留下...</p>'}
                     </div>
-                    ${!isOwner ? `
+                `;
+                
+                // 如果是管理员，显示额外的统计信息
+                 if (isAdmin) {
+                     // 使用带缓存的请求获取用户统计数据
+                     const userStats = await DataCache.cachedRequest(
+                         `userStats_${userId}`,
+                         () => AdministratorAPI.getSpecificUserStats(userId),
+                         null, // 不显示加载状态，因为已经在上面显示了
+                         '加载用户统计失败'
+                     );
+                     
+                     // 缓存用户统计数据
+                     DataCache.set(`userStats_${userId}`, userStats);
+                     
+                     // 添加统计信息HTML
+                     html += `
+                         <!-- 用户统计数据 -->
+                         <div class="user-stats-section">
+                             <h3 style="margin-bottom: 15px; color: #667eea;">📊 用户统计</h3>
+                             <div class="stats-overview">
+                                 <div class="stat-card">
+                                     <div class="stat-value">${userStats.behavior_summary?.play_count || 0}</div>
+                                     <div class="stat-label">播放次数</div>
+                                 </div>
+                                 <div class="stat-card">
+                                     <div class="stat-value">${userStats.behavior_summary?.total_duration_min || 0}</div>
+                                     <div class="stat-label">总播放时长(分钟)</div>
+                                 </div>
+                                 <div class="stat-card">
+                                     <div class="stat-value">${userStats.behavior_summary?.comment_count || 0}</div>
+                                     <div class="stat-label">评论数</div>
+                                 </div>
+                                 <div class="stat-card">
+                                     <div class="stat-value">${userStats.behavior_summary?.favorite_count || 0}</div>
+                                     <div class="stat-label">收藏数</div>
+                                 </div>
+                                 <div class="stat-card">
+                                     <div class="stat-value">${userStats.social_stats?.followers_count || 0}</div>
+                                     <div class="stat-label">粉丝数</div>
+                                 </div>
+                                 <div class="stat-card">
+                                     <div class="stat-value">${userStats.social_stats?.following_count || 0}</div>
+                                     <div class="stat-label">关注数</div>
+                                 </div>
+                             </div>
+                             
+                             <!-- 额外详细信息 -->
+                             <div style="margin-top: 20px;">
+                                 <h4 style="margin-bottom: 10px; color: #667eea;">🎵 听歌偏好</h4>
+                                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                     <div style="flex: 1; min-width: 200px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;">
+                                         <p style="margin: 0; font-weight: bold;">最常听歌手</p>
+                                         <p style="margin: 5px 0 0 0;">${userStats.top_artist?.singer_name || '无数据'}</p>
+                                     </div>
+                                     <div style="flex: 1; min-width: 200px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;">
+                                         <p style="margin: 0; font-weight: bold;">最活跃时段</p>
+                                         <p style="margin: 5px 0 0 0;">${userStats.peak_hour !== null ? `${userStats.peak_hour}:00` : '无数据'}</p>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                     `;
+                 }
+                
+                // 如果不是查看自己的资料，显示关注按钮
+                if (!isOwner) {
+                    html += `
                     <div style="margin-bottom: 20px;">
                         <button class="btn btn-primary" onclick="followUser(${profile.user_id})">➕ 关注</button>
                         <button class="btn btn-secondary" onclick="unfollowUser(${profile.user_id})">➖ 取消关注</button>
                     </div>
-                    ` : ''}
-                `;
+                    `;
+                }
+                
+                container.innerHTML = html;
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-error">${error.error || '无法查看此用户信息'}</div>`;
             }

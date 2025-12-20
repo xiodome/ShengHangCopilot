@@ -338,7 +338,7 @@ def profile(request, owner_id):
     # 2. 查询个人信息
     # --------------------------
     sql = """
-        SELECT user_name, gender, birthday, region, email, profile 
+        SELECT user_name, gender, birthday, region, email, profile, visibility 
         FROM User WHERE user_id = %s
     """
 
@@ -349,7 +349,7 @@ def profile(request, owner_id):
         if not row:
             return json_cn({"error": "用户不存在"}, 404)
 
-        username, gender, birthday, region, email, profile_text = row
+        username, gender, birthday, region, email, profile_text, visibility = row
 
     # --------------------------
     # 3. 处理空值
@@ -371,7 +371,8 @@ def profile(request, owner_id):
         "region": region,
         "email": email,
         "profile": profile_text,
-        "is_owner": is_owner
+        "is_owner": is_owner,
+        "visibility": visibility
     })
 
 

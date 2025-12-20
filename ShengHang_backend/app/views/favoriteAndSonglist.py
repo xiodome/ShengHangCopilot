@@ -1106,6 +1106,7 @@ def delete_favorite(request):
 # ================================
 # 14. "我收藏的歌曲" 统计
 # ================================
+@csrf_exempt
 def get_my_favorite_songs_stats(request):
     """
     将用户收藏的歌曲视为一个"默认歌单"，返回列表和总时长
@@ -1159,6 +1160,7 @@ def get_my_favorite_songs_stats(request):
 # ================================
 # 15. 平台收藏排行榜
 # ================================
+@csrf_exempt
 def get_platform_top_favorites(request):
     if request.method != "POST":
         return json_cn({"error": "POST required"}, 400)

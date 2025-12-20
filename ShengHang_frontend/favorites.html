@@ -38,17 +38,28 @@
         
         <!-- 统计信息 -->
         <div class="grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;" id="statsCards">
-            <div class="stat-card">
+            <div class="stat-card favorites-stat-card">
                 <div class="number" id="songCount">-</div>
                 <div class="label">收藏歌曲</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card favorites-stat-card">
                 <div class="number" id="albumCount">-</div>
                 <div class="label">收藏专辑</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card favorites-stat-card">
                 <div class="number" id="songlistCount">-</div>
                 <div class="label">收藏歌单</div>
+            </div>
+        </div>
+        
+        <!-- 收藏统计详情 -->
+        <div class="card" id="favoriteStatsCard" style="margin-bottom: 20px; display: none;">
+            <h3 class="card-title">📊 收藏统计详情</h3>
+            <div id="favoriteStatsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
             </div>
         </div>
         
@@ -95,6 +106,9 @@
                 document.getElementById('albumCount').textContent = favoritesData.albums?.count || 0;
                 document.getElementById('songlistCount').textContent = favoritesData.songlists?.count || 0;
                 
+                // 加载收藏统计数据
+                loadFavoriteStats();
+                
                 // 显示当前标签页内容
                 displayCurrentTab();
                 
@@ -102,6 +116,75 @@
                 document.getElementById('favoriteList').innerHTML = `
                     <div class="alert alert-error">${error.error || '加载失败'}</div>
                 `;
+            }
+        }
+        
+        // 加载收藏统计数据
+        async function loadFavoriteStats() {
+            const statsCard = document.getElementById('favoriteStatsCard');
+            const statsContent = document.getElementById('favoriteStatsContent');
+            
+            // 只有收藏歌曲数量大于0时才显示统计卡片
+            const songCount = favoritesData.songs?.count || 0;
+            if (songCount === 0) {
+                statsCard.style.display = 'none';
+                return;
+            }
+            
+            statsCard.style.display = 'block';
+            
+            try {
+                // 使用带缓存的请求
+                const stats = await DataCache.cachedRequest(
+                    'favoriteStats',
+                    () => FavoriteAPI.getMyFavoriteSongsStats(),
+                    'favoriteStatsContent',
+                    '加载统计数据中...',
+                    '加载统计数据失败'
+                );
+                
+                // 缓存结果
+                DataCache.set('favoriteStats', stats);
+                
+                // 显示统计数据
+                statsContent.innerHTML = `
+                    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="stat-item">
+                            <div class="stat-value">${stats.count || 0}</div>
+                            <div class="stat-label">总收藏数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${stats.total_duration_formatted || '0:00'}</div>
+                            <div class="stat-label">收藏歌曲总时长</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${formatSecondsToMMSS(Math.round(stats.total_duration / stats.count)) || '0:00'}</div>
+                            <div class="stat-label">平均歌曲时长</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                // 错误已在safeApiRequest中处理
+                console.error('加载收藏统计数据失败:', error);
+                console.error('错误详情:', JSON.stringify(error, null, 2));
+                
+                // 显示更友好的错误信息
+                const statsContent = document.getElementById('favoriteStatsContent');
+                if (statsContent) {
+                    let errorMsg = '加载统计数据失败';
+                    if (error.error) {
+                        errorMsg = error.error;
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+                    
+                    // 如果有原始响应，尝试提取有用的信息
+                    if (error.rawResponse && error.rawResponse.includes('<')) {
+                        errorMsg = '服务器返回了错误页面，请检查API端点是否正确';
+                    }
+                    
+                    statsContent.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+                }
             }
         }
         
@@ -281,6 +364,81 @@
             } catch (error) {
                 showAlert(error.error || '取消收藏失败', 'error');
             }
+        }
+        
+        // 渲染时长分布
+        function renderDurationDistribution(distribution) {
+            if (!distribution || distribution.length === 0) {
+                return '<p style="color: #888; text-align: center;">暂无数据</p>';
+            }
+            
+            const maxValue = Math.max(...distribution.map(item => item.count));
+            
+            return distribution.map(item => {
+                const percentage = (item.count / maxValue) * 100;
+                const label = item.duration_range || '未知';
+                
+                return `
+                    <div class="chart-bar">
+                        <div class="bar-label">${label}</div>
+                        <div class="bar-container">
+                            <div class="bar" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="bar-value">${item.count}首</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 渲染流派分布
+        function renderGenreDistribution(distribution) {
+            if (!distribution || distribution.length === 0) {
+                return '<p style="color: #888; text-align: center;">暂无数据</p>';
+            }
+            
+            return distribution.map(item => {
+                const percentage = item.percentage || 0;
+                const label = item.genre || '未知';
+                
+                return `
+                    <div class="genre-item">
+                        <div class="genre-label">${label}</div>
+                        <div class="genre-percentage">${percentage}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 渲染月份分布
+        function renderMonthDistribution(distribution) {
+            if (!distribution || distribution.length === 0) {
+                return '<p style="color: #888; text-align: center;">暂无数据</p>';
+            }
+            
+            const maxValue = Math.max(...distribution.map(item => item.count));
+            
+            return distribution.map(item => {
+                const percentage = (item.count / maxValue) * 100;
+                const label = item.month || '未知';
+                
+                return `
+                    <div class="month-bar">
+                        <div class="month-label">${label}</div>
+                        <div class="month-container">
+                            <div class="month-bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="month-value">${item.count}首</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 将秒数转换为mm:ss格式
+        function formatSecondsToMMSS(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         }
         
         function showAlert(message, type) {

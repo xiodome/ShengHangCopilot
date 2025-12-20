@@ -44,6 +44,20 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
         const response = await fetch(url, finalOptions);
+        
+        // 检查响应内容类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error(`API Error: Expected JSON but got ${contentType || 'unknown'} for ${endpoint}`, text);
+            throw { 
+                status: response.status, 
+                url: endpoint,
+                error: `服务器返回了非JSON格式的响应: ${contentType || 'unknown'}`,
+                rawResponse: text
+            };
+        }
+        
         const data = await response.json();
         
         if (!response.ok) {
@@ -286,15 +300,21 @@ const FavoriteAPI = {
     }),
 
     // 获取收藏歌曲统计
-    getMyFavoriteSongsStats: () => apiRequest('/favorite/get_my_favorite_songs_stats/', {
-        method: 'POST'
-    }),
+    getMyFavoriteSongsStats: () => {
+        console.log('调用getMyFavoriteSongsStats API');
+        return apiRequest('/favorite/get_my_favorite_songs_stats/', {
+            method: 'POST'
+        });
+    },
 
     // 获取平台热门收藏排行
-    getPlatformTopFavorites: (targetType, limit = 10) => apiRequest('/favorite/get_platform_top_favorites/', {
-        method: 'POST',
-        body: { target_type: targetType, limit }
-    })
+    getPlatformTopFavorites: (targetType, limit = 10) => {
+        console.log('调用getPlatformTopFavorites API:', targetType, limit);
+        return apiRequest('/favorite/get_platform_top_favorites/', {
+            method: 'POST',
+            body: { target_type: targetType, limit }
+        });
+    }
 };
 
 // ====================================
@@ -357,7 +377,7 @@ const CommentAPI = {
 // ====================================
 // 播放记录API
 // ====================================
-DEFALUT_PLAY_DURATION = 500
+DEFALUT_PLAY_DURATION = Math.min(Math.floor(-Math.log(1 - Math.random()) * 150 + 40), 360); // 播放时长范围：40-360秒 平均：150秒
 const PlayHistoryAPI = {
     // 记录播放
     recordPlay: (songId, playDuration = 0) => apiRequest('/playHistory/record_play/', {
@@ -563,3 +583,133 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// ====================================
+// 通用UI工具函数
+// ====================================
+
+// 显示加载状态
+function showLoading(containerId, message = '加载中...') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+// 显示错误信息
+function showError(containerId, message, canRetry = false, retryCallback = null) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const retryButton = canRetry && retryCallback ? 
+        `<button class="btn btn-secondary" onclick="${retryCallback}">重试</button>` : '';
+    
+    container.innerHTML = `
+        <div class="alert alert-error">
+            <p>${message}</p>
+            ${retryButton}
+        </div>
+    `;
+}
+
+// 显示空状态
+function showEmpty(containerId, message = '暂无数据') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+// 带错误处理的API请求包装器
+async function safeApiRequest(apiCall, containerId, loadingMessage = '加载中...', errorMessage = '加载失败', canRetry = false, retryCallback = null) {
+    try {
+        showLoading(containerId, loadingMessage);
+        const result = await apiCall();
+        return result;
+    } catch (error) {
+        console.error('API请求错误:', error);
+        const errorMsg = error.error || error.message || errorMessage;
+        showError(containerId, errorMsg, canRetry, retryCallback);
+        throw error;
+    }
+}
+
+// 简单的数据缓存
+const DataCache = {
+    cache: {},
+    ttl: 5 * 60 * 1000, // 5分钟缓存
+    
+    set(key, data) {
+        this.cache[key] = {
+            data,
+            timestamp: Date.now()
+        };
+    },
+    
+    get(key) {
+        const item = this.cache[key];
+        if (!item) return null;
+        
+        // 检查是否过期
+        if (Date.now() - item.timestamp > this.ttl) {
+            delete this.cache[key];
+            return null;
+        }
+        
+        return item.data;
+    },
+    
+    clear() {
+        this.cache = {};
+    },
+    
+    // 带缓存的API请求
+    async cachedRequest(cacheKey, apiCall, containerId, loadingMessage = '加载中...', errorMessage = '加载失败') {
+        console.log('DataCache.cachedRequest调用:', cacheKey, containerId);
+        
+        // 尝试从缓存获取数据
+        const cachedData = this.get(cacheKey);
+        if (cachedData) {
+            console.log('从缓存获取数据:', cacheKey);
+            return cachedData;
+        }
+        
+        // 缓存中没有数据，发起API请求
+        try {
+            console.log('发起API请求:', cacheKey);
+            if (containerId) {
+                showLoading(containerId, loadingMessage);
+            }
+            const result = await apiCall();
+            console.log('API请求成功:', cacheKey, result);
+            return result;
+        } catch (error) {
+            console.error('API请求错误:', error);
+            if (containerId) {
+                let errorMsg = errorMessage;
+                if (error.error) {
+                    errorMsg = error.error;
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                
+                // 如果有原始响应，尝试提取有用的信息
+                if (error.rawResponse && error.rawResponse.includes('<')) {
+                    errorMsg = '服务器返回了错误页面，请检查API端点是否正确';
+                }
+                
+                showError(containerId, errorMsg, false, null);
+            }
+            throw error;
+        }
+    }
+};

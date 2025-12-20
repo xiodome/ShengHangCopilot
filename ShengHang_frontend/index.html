@@ -37,19 +37,19 @@
         
         <!-- 统计卡片 -->
         <div class="grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
-            <div class="stat-card">
+            <div class="stat-card home-stat-card">
                 <div class="number" id="playCountWeek">-</div>
                 <div class="label">本周播放</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card home-stat-card">
                 <div class="number" id="favoriteCount">-</div>
                 <div class="label">收藏歌曲</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card home-stat-card">
                 <div class="number" id="songlistCount">-</div>
                 <div class="label">我的歌单</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card home-stat-card">
                 <div class="number" id="followingCount">-</div>
                 <div class="label">关注数</div>
             </div>
@@ -88,6 +88,15 @@
                 <p>加载中...</p>
             </div>
         </div>
+        
+        <!-- 平台热门收藏 -->
+        <div class="card">
+            <h3 class="card-title">🔥 平台热门收藏</h3>
+            <div id="topFavorites" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
     </div>
 
     <script src="js/api.js"></script>
@@ -115,6 +124,7 @@
             loadStats();
             loadWeekReport();
             loadTopSongs();
+            loadTopFavorites();
         }
         
         // 加载统计数据
@@ -220,6 +230,161 @@
                         <p>加载失败</p>
                     </div>
                 `;
+            }
+        }
+        
+        // 加载平台热门收藏
+        async function loadTopFavorites() {
+            try {
+                const container = document.getElementById('topFavorites');
+                container.innerHTML = '<div class="loading">加载热门收藏中...</div>';
+                
+                // 定义三种收藏类型
+                const favoriteTypes = ['song', 'album', 'songlist'];
+                const typeLabels = {
+                    'song': '热门歌曲',
+                    'album': '热门专辑',
+                    'songlist': '热门歌单'
+                };
+                
+                let allResults = {};
+                
+                // 为每种类型发起请求
+                for (const type of favoriteTypes) {
+                    try {
+                        const result = await DataCache.cachedRequest(
+                            `platformTopFavorites_${type}`,
+                            () => FavoriteAPI.getPlatformTopFavorites(type, 5), // 每种类型获取5个
+                            `topFavorites_${type}`,
+                            `加载${typeLabels[type]}中...`,
+                            `加载${typeLabels[type]}失败`
+                        );
+                        
+                        // 后端返回的数据结构是 { ranking: [...], type: "song/album/songlist" }
+                        // 我们需要将其转换为前端期望的格式
+                        allResults[type] = result.ranking || [];
+                    } catch (error) {
+                        console.error(`加载${typeLabels[type]}失败:`, error);
+                        allResults[type] = [];
+                    }
+                }
+                
+                // 检查是否有任何数据
+                const hasAnyData = Object.values(allResults).some(items => items.length > 0);
+                
+                if (!hasAnyData) {
+                    showEmpty('topFavorites', '暂无热门收藏数据');
+                    return;
+                }
+                
+                // 构建HTML内容
+                let htmlContent = '';
+                
+                // 为每种类型创建一个区域
+                for (const type of favoriteTypes) {
+                    const items = allResults[type];
+                    if (items.length === 0) continue;
+                    
+                    htmlContent += `
+                        <div class="favorites-section">
+                            <h3 class="section-title">${typeLabels[type]}</h3>
+                            <div class="favorites-list">
+                                ${items.map((item, index) => {
+                                    // 根据收藏类型显示不同的图标和信息
+                                    let icon, title, subtitle, actionButton;
+                                    
+                                    if (type === 'song') {
+                                        icon = '🎵';
+                                        title = item.name || '未知歌曲';
+                                        subtitle = `收藏 ${item.fav_count} 次`;
+                                        actionButton = `<button class="btn btn-small btn-primary" onclick="viewSong(${item.target_id})">查看</button>`;
+                                    } else if (type === 'album') {
+                                        icon = '💿';
+                                        title = item.name || '未知专辑';
+                                        subtitle = `收藏 ${item.fav_count} 次`;
+                                        actionButton = `<button class="btn btn-small btn-primary" onclick="viewAlbum(${item.target_id})">查看</button>`;
+                                    } else if (type === 'songlist') {
+                                        icon = '�';
+                                        title = item.name || '未知歌单';
+                                        subtitle = `收藏 ${item.fav_count} 次`;
+                                        actionButton = `<button class="btn btn-small btn-primary" onclick="viewSonglist(${item.target_id})">查看</button>`;
+                                    } else {
+                                        icon = '📋';
+                                        title = item.name || '未知项目';
+                                        subtitle = `收藏 ${item.fav_count} 次`;
+                                        actionButton = '';
+                                    }
+                                    
+                                    return `
+                                        <div class="song-item">
+                                            <div style="width: 30px; text-align: center; font-size: 20px;">
+                                                ${index < 3 ? '🔥' : icon}
+                                            </div>
+                                            <div class="song-info">
+                                                <div class="song-title">${title}</div>
+                                                <div class="song-meta">${subtitle}</div>
+                                            </div>
+                                            <div class="song-actions">
+                                                ${actionButton}
+                                                <button class="btn btn-small btn-secondary" onclick="addToFavorite('${type}', ${item.target_id})">收藏</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = htmlContent;
+                
+                // 添加样式以美化不同类型的区域
+                if (!document.getElementById('favorites-section-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'favorites-section-styles';
+                    style.textContent = `
+                        .favorites-section {
+                            margin-bottom: 20px;
+                        }
+                        .section-title {
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                            color: #333;
+                            border-left: 4px solid #667eea;
+                            padding-left: 10px;
+                        }
+                        .favorites-list {
+                            background: #f9f9f9;
+                            border-radius: 8px;
+                            padding: 10px;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+            } catch (error) {
+                // 错误已在safeApiRequest中处理
+                console.error('加载平台热门收藏失败:', error);
+                console.error('错误详情:', JSON.stringify(error, null, 2));
+                
+                // 显示更友好的错误信息
+                const container = document.getElementById('topFavorites');
+                if (container) {
+                    let errorMsg = '加载热门收藏失败';
+                    if (error.error) {
+                        errorMsg = error.error;
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+                    
+                    // 如果有原始响应，尝试提取有用的信息
+                    if (error.rawResponse && error.rawResponse.includes('<')) {
+                        errorMsg = '服务器返回了错误页面，请检查API端点是否正确';
+                    }
+                    
+                    container.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+                }
             }
         }
         
