@@ -32,11 +32,9 @@ urlpatterns = [
     path("user/<int:uid>/get_followings/", user.get_followings),
     path("user/<int:uid>/get_followsingers/", user.get_followsingers),
     path("user/get_user_info/", user.get_user_info),
-    path("Administrator/profile/", user.admin_profile),
     path("user/update_visibility/", user.update_visibility),
 
     # 歌手与音乐管理模块
-    path("music/", music.music),
     path("singer/search_singer/", music.search_singer),
     path("singer/profile/<int:singer_id>/", music.singer_profile),
     path("album/search_album/", music.search_album),

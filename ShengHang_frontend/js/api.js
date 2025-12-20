@@ -156,11 +156,6 @@ const UserAPI = {
         body: { user_name: userName }
     }),
 
-    // 管理员资料
-    getAdminProfile: () => apiRequest('/Administrator/profile/', {
-        method: 'GET'
-    }),
-
     // 更新个人信息可见性
     updateVisibility: (visibility) => apiRequest('/user/update_visibility/', {
         method: 'POST',
@@ -172,11 +167,6 @@ const UserAPI = {
 // 音乐管理API
 // ====================================
 const MusicAPI = {
-    // 音乐中心
-    getMusicCenter: () => apiRequest('/music/', {
-        method: 'GET'
-    }),
-
     // 搜索歌手
     searchSinger: (filters) => apiRequest('/singer/search_singer/', {
         method: 'POST',

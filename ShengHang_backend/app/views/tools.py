@@ -16,12 +16,13 @@ def json_cn(data, status=200):
     return JsonResponse(data, status=status, json_dumps_params={'ensure_ascii': False})
 
 # 管理员权限检查
+ADMIN_USER_ID = 1  # 可以改成实际管理员 id
 def require_admin(request):
     user_id = request.session.get("user_id")
     if not user_id:
         return False, json_cn({"error": "请先登录"}, 403)
 
-    if user_id != 1:
+    if user_id != ADMIN_USER_ID:
         return False, json_cn({"error": "不是管理员"}, 403)
 
     return True, None

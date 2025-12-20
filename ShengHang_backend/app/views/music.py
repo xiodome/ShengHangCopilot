@@ -6,35 +6,10 @@ import json
 from .tools import *
 
 
-# ================================
-# 1. 音乐中心
-# ================================
-@csrf_exempt
-def music(request):
-    # --------------------------
-    # 1. 检查登录状态
-    # --------------------------
-    if "user_id" not in request.session:
-        return json_cn({"error": "请先登录后再进行查看操作"}, 403)
-
-    uid = request.session["user_id"]
-
-    return json_cn({
-        "message": "音乐中心",
-        "user_id": uid,
-        "available_actions": [
-            "search_singer",
-            "search_album", 
-            "search_song",
-            "search_songlist"
-        ]
-    })
-
-
 
 
 # ================================
-# 2. 搜索歌手
+# 1. 搜索歌手
 # ================================
 @csrf_exempt
 def search_singer(request):
@@ -168,7 +143,7 @@ def search_singer(request):
 
 
 # ================================
-# 3. 歌手详情
+# 2. 歌手详情
 # ================================
 @csrf_exempt
 def singer_profile(request, singer_id):
@@ -276,7 +251,7 @@ def singer_profile(request, singer_id):
 
 
 # ================================
-# 4. 搜索专辑
+# 3. 搜索专辑
 # ================================
 @csrf_exempt
 def search_album(request):
@@ -377,7 +352,7 @@ def search_album(request):
 
 
 # ================================
-# 5. 专辑详情
+# 4. 专辑详情
 # ================================
 @csrf_exempt
 def album_profile(request, album_id):
@@ -510,7 +485,7 @@ def album_profile(request, album_id):
 
 
 # ================================
-# 6. 搜索歌曲
+# 5. 搜索歌曲
 # ================================
 @csrf_exempt
 def search_song(request):
@@ -629,7 +604,7 @@ def search_song(request):
 
 
 # ================================
-# 7. 歌曲详情
+# 6. 歌曲详情
 # ================================
 @csrf_exempt
 def song_profile(request, song_id):
